@@ -1,0 +1,11 @@
+# ninja log v5
+89	1044	7501257068845771	CMakeFiles/FATChecker.dir/main.cpp.obj	3fc41f42ca32c1cf
+328	448	7501261215012438	FATChecker.exe	1387fb4b5b317898
+2	327	7501261213822432	CMakeFiles/FATChecker.dir/includes/Analyzers.cpp.obj	35f3653e3e7d3b1d
+18	405	7501323853884059	CMakeFiles/FATChecker.dir/includes/AnalyzersFAT16.cpp.obj	d9ae43f2b35e53a0
+33	406	7501323854144059	CMakeFiles/FATChecker.dir/includes/AnalyzersFAT12.cpp.obj	f684e39eb878a4ca
+48	407	7501323854264062	CMakeFiles/FATChecker.dir/includes/AnalyzersFAT32.cpp.obj	e594190950e75f5
+2	945	7501323859614056	CMakeFiles/FATChecker.dir/main.cpp.obj	3fc41f42ca32c1cf
+946	1073	7501323860904056	FATChecker.exe	53d805fbae78b883
+2	329	7501325938510042	CMakeFiles/FATChecker.dir/includes/AnalyzersFAT32.cpp.obj	e594190950e75f5
+337	481	7501325940000052	FATChecker.exe	53d805fbae78b883
