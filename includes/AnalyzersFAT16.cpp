@@ -12,7 +12,7 @@
 //#define DEBUG_PRNT
 
 
-// Функція для аналізу та порівняння FAT таблиць
+// Аналіз та порівняння FAT таблиць
 bool analyzeFAT16Tables(const std::vector<uint16_t*>& FATs, int FATSize, uint16_t bytesPerSec) {
     #ifdef DEBUG_PRNT
     std::cout<< "---------------------------------"<<std::endl;

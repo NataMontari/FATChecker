@@ -16,7 +16,7 @@ void AnalyzeDiskData12(){
     std::cout<<"Analyzing Disk Data"<<std::endl;
 };
 
-// Функція для перевірки, чи значення входить у допустимий список
+// Перевірка, чи значення входить у допустимий список
 template <typename T, size_t N>
 bool isValid(T value, const T (&validArray)[N]) {
     return std::any_of(std::begin(validArray), std::end(validArray), [value](T v) { return v == value; });
@@ -42,7 +42,7 @@ bool isBootFAT12Invalid(extFAT12_16* bpb){
     uint8_t bootSig = bpb->BS_BootSig;
 
 
-    // Далі використовуємо ці змінні для перевірок
+    // Константні змінні для перевірок
     const uint16_t validSectorSizes[] = {512, 1024, 2048, 4096};
     const uint8_t validSecPerClus[] = {1, 2, 4, 8, 16, 32, 64, 128};
     const uint8_t validMedia[] = {0xF0, 0xF8, 0xF9,
@@ -61,19 +61,19 @@ bool isBootFAT12Invalid(extFAT12_16* bpb){
         isBootInvalid = true;
     }
 
-    // Перевіряємо кількість секторів на кластер
+    // Перевіряємо к-сть секторів на кластер
     if (!isValid(secPerClus, validSecPerClus)) {
         std::cerr << "Incorrect number of sectors per cluster: " << (int)secPerClus << std::endl;
         isBootInvalid = true;
     }
 
-    // Перевіряємо кількість зарезервованих секторів
+    // Перевіряємо к-сть зарезервованих секторів
     if (rsvdSecCnt == 0) {
         std::cerr << "Incorrect number of reserved sectors: " << rsvdSecCnt << std::endl;
         isBootInvalid = true;
     }
 
-    // Перевіряємо кількість FAT-таблиць
+    // Перевіряємо к-сть FAT-таблиць
     if (numFATs == 0) {
         std::cerr << "Incorrect number of FAT tables: " << (int)numFATs << std::endl;
         isBootInvalid = true;
@@ -108,7 +108,7 @@ bool isBootFAT12Invalid(extFAT12_16* bpb){
         isBootInvalid = true;
     }
 
-    // Перевіряємо загальну кількість секторів
+    // Перевіряємо загальну к-сть секторів
     if (totSec32 < 65536 && totSec16 == 0){
         std::cerr << "Number of sectors can't be zero!" << std::endl;
         isBootInvalid = true;
@@ -134,7 +134,7 @@ bool isBootFAT12Invalid(extFAT12_16* bpb){
     }
 
     // Перевіряємо BS_BootSig =  0x29 якщо один з наступних = 0x00
-    if (bootSig == 0x29 && bpb->BS_VolID == 0x00 && bpb->BS_VolLab[0] == 0x00) { // Assuming you have this in your struct
+    if (bootSig == 0x29 && bpb->BS_VolID == 0x00 && bpb->BS_VolLab[0] == 0x00) {
         std::cerr << "Invalid boot signature: " << (int)bootSig << std::endl;
         isBootInvalid = true;
     }

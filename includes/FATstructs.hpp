@@ -9,18 +9,18 @@
 typedef struct {
     uint8_t BS_jmpBoot[3];          // Перші 3 байти — це код переходу
     char BS_OEMName[8];              // Ідентифікатор MS
-    uint16_t BPB_BytsPerSec;       // Кількість байтів на сектор
-    uint8_t BPB_SecPerClus;     // Кількість секторів на кластер
+    uint16_t BPB_BytsPerSec;       // К-сть байтів на сектор
+    uint8_t BPB_SecPerClus;     // К-сть секторів на кластер
     uint16_t BPB_RsvdSecCnt;      // Зарезервовані сектори
-    uint8_t BPB_NumFATs;               // Кількість FAT таблиць
-    uint16_t BPB_RootEntCnt;       // Кількість записів у кореневому каталозі
-    uint16_t BPB_TotSec16;       // Загальна кількість секторів (якщо < 65536)
+    uint8_t BPB_NumFATs;               // К-сть FAT таблиць
+    uint16_t BPB_RootEntCnt;       // К-сть записів у кореневому каталозі
+    uint16_t BPB_TotSec16;       // Загальна к-сть секторів (якщо < 65536)
     uint8_t BPB_Media;             // Тип носія
     uint16_t BPB_FATSz16;            // Розмір FAT в секторах (для FAT12/FAT16)
-    uint16_t BPB_SecPerTrk;      // Кількість секторів на доріжку
-    uint16_t BPB_NumHeads;             // Кількість головок
+    uint16_t BPB_SecPerTrk;      // К-сть секторів на доріжку
+    uint16_t BPB_NumHeads;             // К-сть головок
     uint32_t BPB_HiddSec;        // Приховані сектори
-    uint32_t BPB_TotSec32;       // Загальна кількість секторів (якщо більше 65536)
+    uint32_t BPB_TotSec32;       // Загальна к-сть секторів (якщо більше 65536)
 } BasicFAT;
 
 

@@ -63,13 +63,13 @@ bool isBootFAT32Invalid(extFAT32* bpb){
         isBootInvalid = true;
     }
 
-    // Перевіряємо кількість секторів на кластер
+    // Перевіряємо к-сть секторів на кластер
     if (!isValid(secPerClus, validSecPerClus)) {
         std::cerr << "Incorrect number of sectors per cluster: " << (int)secPerClus << std::endl;
         isBootInvalid = true;
     }
 
-    // Перевіряємо кількість зарезервованих секторів
+    // Перевіряємо к-сть зарезервованих секторів
     if (rsvdSecCnt == 0) {
         std::cerr << "Incorrect number of reserved sectors: " << rsvdSecCnt << std::endl;
         isBootInvalid = true;
@@ -114,7 +114,7 @@ bool isBootFAT32Invalid(extFAT32* bpb){
         isBootInvalid = true;
     }
 
-    // Перевіряємо загальну кількість секторів
+    // Перевіряємо загальну к-сть секторів
     if (totSec16 != 0){
         std::cerr << "Invalid BPB_TotSec16, value here should be 0!" << std::endl;
         isBootInvalid = true;
@@ -148,7 +148,7 @@ bool isBootFAT32Invalid(extFAT32* bpb){
     }
 
     // Перевіряємо BS_BootSig =  0x29 якщо один з наступних = 0x00
-    if (bootSig == 0x29 && bpb->BS_VolID == 0x00 && bpb->BS_VolLab[0] == 0x00) { // Assuming you have this in your struct
+    if (bootSig == 0x29 && bpb->BS_VolID == 0x00 && bpb->BS_VolLab[0] == 0x00) {
         std::cerr << "Invalid boot signature: " << (int)bootSig << std::endl;
         isBootInvalid = true;
     }
