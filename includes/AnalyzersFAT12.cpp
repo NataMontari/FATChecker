@@ -114,6 +114,13 @@ bool isBootFAT12Invalid(extFAT12_16* bpb){
         isBootInvalid = true;
     }
 
+    // Перевіряємо к-сть секторів для всіх FAT таблиць
+    int numOfSecsForFAT = numFATs * fatSize;
+    if ((totSec32 != 0 && numOfSecsForFAT >= totSec32) || (totSec16 != 0 && numOfSecsForFAT >= totSec16)){
+        std::cerr << "Number of sectors for FAT tables is equal or greater than number of all sectors"<<std::endl;
+        isBootInvalid = true;
+    }
+
     // Перевіряємо BS_DrvNum
     if (drvNum != 0x80 && drvNum != 0x00) {
         std::cerr << "Invalid drive number: " << (int)drvNum << std::endl;

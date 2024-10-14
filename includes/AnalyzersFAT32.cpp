@@ -124,6 +124,12 @@ bool isBootFAT32Invalid(extFAT32* bpb){
         isBootInvalid = true;
     }
 
+    // Перевіряємо к-сть секторів для всіх FAT таблиць
+    if (numFATs * fatSize32 >= totSec32 ){
+        std::cerr << "Number of sectors for FAT tables is equal or greater than number of all sectors"<<std::endl;
+        isBootInvalid = true;
+    }
+
     if (rootClusNum <= 1){
         std::cerr << " Invalid number of root cluster: "<< (int)rootClusNum<<std::endl;
         isBootInvalid = true;

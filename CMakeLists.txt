@@ -11,6 +11,7 @@ add_executable(FATChecker main.cpp
         includes/AnalyzersFAT32.hpp
         includes/AnalyzersFAT32.cpp
         includes/AnalyzersFAT12.cpp
-        includes/AnalyzersFAT12.hpp)
+        includes/AnalyzersFAT12.hpp
+        includes/FATTableStructs.hpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE includes)

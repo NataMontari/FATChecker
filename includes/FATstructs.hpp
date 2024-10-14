@@ -58,6 +58,47 @@ typedef struct {
     uint16_t BS_BootSectorSig;      // Підпис бут-сектора (0xAA55)
 } extFAT32;
 
+// Структура для запису файлу в кореневій директорії
+struct FAT16DirEntry {
+    char DIR_Name[11];      // Ім'я файлу
+    union {
+        struct {
+            uint8_t ATTR_READ_ONLY : 1;   // 0x01
+            uint8_t ATTR_HIDDEN : 1;      // 0x02
+            uint8_t ATTR_SYSTEM : 1;      // 0x04
+            uint8_t ATTR_VOLUME_ID : 1;   // 0x08
+            uint8_t ATTR_DIRECTORY : 1;    // 0x10
+            uint8_t ATTR_ARCHIVE : 1;      // 0x20
+            uint8_t ATTR_RESERVED : 2;     // Залишкові біти
+        };
+        uint8_t DIR_Attr; // Повний байт для атрибутів
+    };
+    uint8_t DIR_NTRes;
+    uint8_t DIR_CrtTimeTenth;
+    uint16_t DIR_CrtTime;
+    uint16_t DIR_CrtDate;
+    uint16_t DIR_LstAccDate;
+    uint16_t DIR_FstClusHI; // Перший кластер
+    uint16_t DIR_WrtTime;
+    uint16_t DIR_WrtDate;
+    uint16_t DIR_FstClusLO;
+    uint32_t DIR_FileSize;  // Розмір файлу
+};
+
+// Структура LFN запису
+struct LFNEntry {
+    uint8_t sequence;          // Порядковий номер
+    char name1[10];            // Перші 5 символів імені
+    uint8_t attribute;         // Атрибут (0x0F для LFN)
+    uint8_t type;              // Зарезервовано
+    uint8_t checksum;          // Контрольна сума
+    char name2[12];            // Наступні 6 символів імені
+    uint16_t firstCluster;     // Зарезервовано
+    char name3[4];             // Останні 2 символи імені
+};
+
+
+
 #pragma pack(pop)  // Повертає попереднє вирівнювання
 
 #endif //FATCHECKER_FATSTRUCTS_HPP
