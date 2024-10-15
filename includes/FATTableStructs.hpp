@@ -1,6 +1,3 @@
-//
-// Created by Kateryna on 09.10.2024.
-//
 
 #ifndef FATCHECKER_FATTABLESTRUCTS_HPP
 #define FATCHECKER_FATTABLESTRUCTS_HPP

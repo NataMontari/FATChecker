@@ -1,6 +1,4 @@
-//
-// Created by Kateryna on 09.10.2024.
-//
+
 
 #ifndef FATCHECKER_ANALYZERSFAT12_HPP
 #define FATCHECKER_ANALYZERSFAT12_HPP
