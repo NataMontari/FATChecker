@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <stdio.h>
 #include <fcntl.h>
+#include <set>
 
 
 //#define DEBUG_PRNT
@@ -43,34 +44,39 @@ void AnalyzeCopyFAT16(){
 
 #include <cctype>  // Для std::isalnum
 
-bool isValidName(const char* name) {
+bool isValidName(const std::string& name, int longNameFlag) {
     // FAT16 ім'я має бути рівно 11 символів (8 для імені і 3 для розширення)
-    const int nameLength = 11;
-    const char* validChars = "$%'-_@~`!(){}^#&";  // Дозволені спеціальні символи
+    const char* validChars = "$%'-_@~`!(){}^#&.";  // Дозволені спеціальні символи
 
-    // Перевіряємо перші 8 символів (ім'я)
-    for (int i = 0; i < 8; i++) {
-        char c = name[i];
 
-        // Допускаємо великі літери, цифри або спеціальні символи
-        if (!std::isupper(c) && !std::isdigit(c) && strchr(validChars, c) == nullptr) {
-            return false;
+    // FAT16 ім'я не повинно починатися з пробілу або містити недопустимі символи
+    if (name[0] == 0x20) {
+        std::cout << "Error: Name starts with a space." << std::endl;
+        return false;
+    }
+    std::string fileName = name;
+    fileName.erase(std::remove(fileName.begin(), fileName.end(), ' '), fileName.end()); // Видаляємо пробіли
+
+    if (longNameFlag){
+        for (auto &c: fileName){
+            // Допускаємо великі літери, цифри або спеціальні символи
+            if (!std::isalpha(c) && !std::isdigit(c) && strchr(validChars, c) == nullptr) {
+                return false;
+            }
         }
     }
-
-    // Перевіряємо останні 3 символи (розширення)
-    for (int i = 8; i < nameLength; i++) {
-        char c = name[i];
-
-        // Аналогічно, допускаємо лише великі літери, цифри або спецсимволи
-        if (!std::isupper(c) && !std::isdigit(c) && strchr(validChars, c) == nullptr) {
-            return false;
+    else{
+        for (auto &c: fileName){
+            // Допускаємо великі літери, цифри або спеціальні символи
+            if (!std::isupper(c) && !std::isdigit(c) && strchr(validChars, c) == nullptr) {
+                return false;
+            }
         }
     }
-
     // Якщо всі символи пройшли перевірку, ім'я файлу є валідним
     return true;
 }
+
 // Функція для злиття частин LFN
 std::string extractLFN(const LFNEntry& entry) {
     std::string name;
@@ -128,6 +134,91 @@ std::string getLongFileName(const std::vector<FAT16DirEntry>& rootDirEntries) {
     return longName;
 }
 
+bool check_date(uint16_t date_value) {
+    // Перевірка на 0 (не підтримується)
+    if (date_value == 0) {
+        return true; // Ігноруємо перевірку
+    }
+
+    uint8_t day = date_value & 0x1F;               // Бітові позиції 0-4
+    uint8_t month = (date_value >> 5) & 0x0F;      // Бітові позиції 5-8
+    uint8_t year = (date_value >> 9) & 0x7F;       // Бітові позиції 9-15
+
+    // Перевірка діапазонів
+    if (!(1 <= day && day <= 31)) return false;
+    if (!(1 <= month && month <= 12)) return false;
+    if (!(0 <= year && year <= 127)) return false; // 1980-2107
+
+    return true;
+}
+
+bool check_time(uint16_t time_value) {
+    // Перевірка на 0 (не підтримується)
+    if (time_value == 0) {
+        return true; // Ігноруємо перевірку
+    }
+
+    uint8_t seconds = time_value & 0x1F;            // Бітові позиції 0-4
+    uint8_t minutes = (time_value >> 5) & 0x3F;     // Бітові позиції 5-10
+    uint8_t hours = (time_value >> 11) & 0x1F;      // Бітові позиції 11-15
+
+    // Перевірка діапазонів
+    if (!(0 <= seconds && seconds <= 29)) return false; // 0-29 (0-58 секунд)
+    if (!(0 <= minutes && minutes <= 59)) return false;
+    if (!(0 <= hours && hours <= 23)) return false;
+
+    return true;
+}
+
+bool checkEntry(const FAT16DirEntry& entry){
+    bool isEntryValid = true;
+    // Check reserved attribute
+
+    // Validate creation time and date
+    if (entry.DIR_CrtTimeTenth < 0 || entry.DIR_CrtTimeTenth > 199) {
+        std::cout << "Error: DIR_CrtTimeTenth out of range." << std::endl;
+        isEntryValid = false;
+    }
+
+    // Validate the first cluster high word (must be 0 for FAT16)
+    if (entry.DIR_FstClusHI != 0) {
+        std::cout << "Error: DIR_FstClusHI must be 0 on FAT16." << std::endl;
+        isEntryValid = false;
+    }
+    // Validate creation date
+    if (!check_date(entry.DIR_CrtDate)) {
+        std::cout << "Error: Invalid creation date." << std::endl;
+        isEntryValid = false;
+    }
+
+    // Validate last access date
+    if (!check_date(entry.DIR_LstAccDate)) {
+        std::cout << "Error: Invalid last access date." << std::endl;
+        isEntryValid = false;
+    }
+
+    // Validate write date
+    if (!check_date(entry.DIR_WrtDate)) {
+        std::cout << "Error: Invalid write date." << std::endl;
+        isEntryValid = false;
+    }
+
+    // Validate creation time
+    if (!check_time(entry.DIR_CrtTime)) {
+        std::cout << "Error: Invalid creation time." << std::endl;
+        isEntryValid = false;
+    }
+
+    // Validate write time
+    if (!check_time(entry.DIR_WrtTime)) {
+        std::cout << "Error: Invalid write time." << std::endl;
+        isEntryValid = false;
+    }
+
+
+    return isEntryValid;
+}
+
 bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FAT16DirEntry>& dataDirEntries){
     bool isRootDirValid = true;
     int volumeIDCount = 0;
@@ -136,6 +227,7 @@ bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vec
     std::vector<std::string> lfnParts;  // Для зберігання частин довгого імені
     std::string longFileName;
     std::vector<std::string> longFileNames;
+    std::set<std::string> fileNamesSet; // Набір для перевірки дублікатів імен
 
 
     for(const auto &entry: rootDirEntries){
@@ -152,6 +244,19 @@ bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vec
         if(entry.DIR_Name[0] == 0){
             break;
         }
+
+        if(static_cast<unsigned char>(entry.DIR_Name[0])==0x2e){
+            if(static_cast<unsigned char>(entry.DIR_Name[1]) == 0x2e){
+                std::cout<<"Error: Root directory contains dotdot(..) entry"<<std::endl;
+                isRootDirValid = false;
+                continue;
+            }else{
+                std::cout<<"Error: Root directory contains dot(.) entry"<<std::endl;
+                isRootDirValid = false;
+                continue;
+            }
+        }
+
 
         if (static_cast<unsigned char>(entry.DIR_Name[0]) == 0xe5) { // Якщо ім'я не пуста стрічка
             continue;
@@ -172,6 +277,20 @@ bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vec
             }
             lfnParts.clear();  // Очищаємо частини імені після використання
 
+            // Перевірка імені
+            if (!isValidName(longFileName, 1)) {
+                std::cout << "Error: Invalid long file name: " << longFileName << std::endl;
+                isRootDirValid = false;
+            }
+
+            // Перевірка на дублікати імен файлів
+            if (fileNamesSet.find(longFileName) != fileNamesSet.end()) {
+                std::cout << "Error: Duplicate name found: " << longFileName << std::endl;
+                isRootDirValid = false;
+            } else {
+                fileNamesSet.insert(longFileName);
+            }
+
             longFileNames.push_back(longFileName);
             // Виводимо довге ім'я файлу або директорії
             #ifdef DEBUG_PRNT
@@ -180,9 +299,35 @@ bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vec
             longFileName.clear();
         }
 
+        // Перевірка короткого імені
+        std::string fileName(entry.DIR_Name, 11);
+
+        if (!isValidName(fileName, 0)) {
+            std::cout << "Error: Invalid short file name: " << fileName << std::endl;
+            isRootDirValid = false;
+        }
+
+        // Перевірка на коректність атрибутів
+        if ((entry.DIR_Attr & 0x3F) == 0) { // Атрибути не повинні мати недопустимі значення
+            std::cout << "Error: Invalid attribute detected for entry." << std::endl;
+            isRootDirValid = false;
+        }
+
+        if(!checkEntry(entry)){
+            isRootDirValid = false;
+        }
+
         if (entry.ATTR_DIRECTORY == 1) {
             directoryCount++;
             dataDirEntries.push_back(entry);
+            // Перевірка на дублікати коротких імен файлів
+            if (fileNamesSet.find(fileName) != fileNamesSet.end()) {
+                std::cout << "Error: Duplicate name found: " << fileName << std::endl;
+                isRootDirValid = false;
+            } else {
+                fileNamesSet.insert(fileName);
+            }
+
             #ifdef DEBUG_PRNT
             std::cout <<"Dir:"<< std::hex << std::setw(2) << std::setfill('0') << (0xFF & static_cast<unsigned char>(entry.DIR_Name[0])) << " ";
             std::cout << std::dec << std::endl;
@@ -192,6 +337,10 @@ bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vec
 
         } else if(entry.ATTR_VOLUME_ID == 1){
             volumeIDCount++;
+            if (entry.DIR_CrtDate != 0){
+                std::cout<<"Error: root entry shouldn't have any associated time stamps"<<std::endl;
+                isRootDirValid = false;
+            }
 
             #ifdef DEBUG_PRNT
             std::cout <<"Volume:"<< std::hex << std::setw(2) << std::setfill('0') << (0xFF & static_cast<unsigned char>(entry.DIR_Name[0])) << " ";
@@ -201,6 +350,13 @@ bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vec
         }
         else{
 
+            // Перевірка на дублікати коротких імен файлів
+            if (fileNamesSet.find(fileName) != fileNamesSet.end()) {
+                std::cout << "Error: Duplicate name found: " << fileName << std::endl;
+                isRootDirValid = false;
+            } else {
+                fileNamesSet.insert(fileName);
+            }
             #ifdef DEBUG_PRNT
             std::cout << "File:"<<std::hex << std::setw(2) << std::setfill('0') << (0xFF & static_cast<unsigned char>(entry.DIR_Name[0])) << " ";
             std::cout << std::dec << std::endl;
@@ -274,11 +430,13 @@ bool readDataCluster(int fd, uint16_t bytesPerSec, uint32_t startSectorAdress, u
         }
 
         // Перевірка атрибута
-        if (entry.DIR_Attr & 0x08) {
+        if (entry.DIR_Attr & 0x04) {
             // Якщо атрибут 0x08, то це системний файл
             std::cerr << "Warning: System file detected: " << entry.DIR_Name << std::endl;
             continue;
         }
+
+
 //        std::string entryDirName(reinterpret_cast<const char*>(entry.DIR_Name), 11);
 //        entryDirName.erase(entryDirName.find_last_not_of(' ') + 1);  // Видаляємо пробіли в кінці імені
 
@@ -302,6 +460,12 @@ bool AnalyzeDiskData16(int fd, uint16_t bytesPerSec, uint8_t sectorsPerCluster, 
     std::cout << "The program is verifying files and folders..." << std::endl;
     uint32_t clusterNum;
     uint32_t startSectorAddress;
+    std::vector<std::string> lfnParts;  // Для зберігання частин довгого імені
+    std::string longFileName;
+    std::vector<std::string> longFileNames;
+    std::set<std::string> fileNamesSet; // Набір для перевірки дублікатів імен
+    bool isDiskDataValid = true;
+
 //    std::cout<<dataStartSector<<std::endl;
     for (const auto & entry: dataDirEntries) {
         std::string entryDirName(reinterpret_cast<const char *>(entry.DIR_Name), 11);
@@ -314,6 +478,57 @@ bool AnalyzeDiskData16(int fd, uint16_t bytesPerSec, uint8_t sectorsPerCluster, 
         clusterNum = (entry.DIR_FstClusHI << 16) | entry.DIR_FstClusLO - 2;
         startSectorAddress = dataStartSector + clusterNum;
 
+
+        if (entry.DIR_Attr == 0x08){
+            std::cout<<"Error: file and data region contains the volume entry"<<std::endl;
+            isDiskDataValid = false;
+            continue;
+        }
+        // Якщо це LFN запис, збираємо частини імені
+        if (entry.DIR_Attr == 0x0F) {
+            const auto* lfn = reinterpret_cast<const LFNEntry*>(&entry);
+            lfnParts.push_back(extractLFN(*lfn));
+            continue;
+        }
+
+        // Якщо є частини довгого імені, об'єднуємо їх
+        if (!lfnParts.empty()) {
+            for (auto it = lfnParts.rbegin(); it != lfnParts.rend(); ++it) {
+                longFileName += *it;
+            }
+            lfnParts.clear();  // Очищаємо частини імені після використання
+            longFileNames.push_back(longFileName);
+            // Перевірка імені
+            if (!isValidName(longFileName, 1)) {
+                std::cout << "Error: Invalid long file name: " << longFileName << std::endl;
+                isDiskDataValid = false;
+            }
+
+            // Перевірка на дублікати імен файлів
+            if (fileNamesSet.find(longFileName) != fileNamesSet.end()) {
+                std::cout << "Error: Duplicate name found: " << longFileName << std::endl;
+                isDiskDataValid = false;
+            } else {
+                fileNamesSet.insert(longFileName);
+            }
+            longFileName.clear();
+
+        }
+
+        // Перевірка імені
+        if (!isValidName(entryDirName, 1)) {
+            std::cout << "Error: Invalid long file name: " << longFileName << std::endl;
+            isDiskDataValid = false;
+        }
+
+        // Перевірка на дублікати імен файлів
+        if (fileNamesSet.find(entryDirName) != fileNamesSet.end()) {
+            std::cout << "Error: Duplicate name found: " << longFileName << std::endl;
+            isDiskDataValid = false;
+        } else {
+            fileNamesSet.insert(entryDirName);
+        }
+
         // Якщо це файл, просто виводимо ім'я
         if (!(entry.DIR_Attr & 0x10)) { // Якщо це не директорія
             std::cout << "File: " << entryDirName << std::endl;
@@ -325,6 +540,12 @@ bool AnalyzeDiskData16(int fd, uint16_t bytesPerSec, uint8_t sectorsPerCluster, 
         std::vector<FAT16DirEntry> subDirEntries;
 
         std::cout << "Start sector address of cluster #" << clusterNum << ": " << startSectorAddress << std::endl;
+
+        if (clusterNum >= 0xFFF8) { // Якщо кластер знаходиться в діапазоні зарезервованих або пошкоджених.
+            std::cerr << "Error: Found a bad or reserved cluster pointer number: " << clusterNum << std::endl;
+            isDiskDataValid = false;
+            continue;
+        }
 
         if (!readDataCluster(fd, bytesPerSec, startSectorAddress, sectorsPerCluster, subDirEntries)) {
             std::cout << "Failed to read entries from the data region." << std::endl;
@@ -366,28 +587,13 @@ bool AnalyzeDiskData16(int fd, uint16_t bytesPerSec, uint8_t sectorsPerCluster, 
 
         }
     }
-//    for (const auto& entry : dataDirEntries) {
-//        // Аналіз записів з файлової області
-//        uint32_t firstCluster = (entry.DIR_FstClusHI << 16) | entry.DIR_FstClusLO;
-//        uint32_t clusterSector = (firstCluster - 2) * sectorsPerCluster; // Обчислення номера сектора
-//        uint32_t sectorAddress = dataStartSector + clusterSector;
-//
-//        // Читаємо запис
-//        std::vector<FAT16DirEntry> subDirEntries;
-//        if (!readDataDirectory(fd, sectorAddress, sectorsPerCluster, subDirEntries)) {
-//            std::cout << "Failed to read entries from the data region." << std::endl;
-//        } else {
-//            // Виводимо результати
-//            std::cout << "Found entries in data region:" << std::endl;
-//            for (const auto& subEntry : subDirEntries) {
-//                std::cout << "  Entry: " << subEntry.DIR_Name << std::endl;
-//            }
-//        }
-//    }
 
     std::cout << "File and folder verification is complete." << std::endl;
-    return true;
+    return isDiskDataValid;
 }
+
+
+
 // Функція для перевірки, чи значення входить у допустимий список
 template <typename T, size_t N>
 bool isValid(T value, const T (&validArray)[N]) {

@@ -195,23 +195,22 @@ void printBasicFAT(extFAT12_16 *bpb) {
     for (int i = 0; i < 3; ++i) {
         std::cout << (int)bpb->basic.BS_jmpBoot[i] << " ";
     }
-    std::cout<<sizeof(bpb->basic.BS_jmpBoot);
-    std::cout << "\nBS_OEMName: " << bpb->basic.BS_OEMName << " "<< sizeof(bpb->basic.BS_OEMName)<<"\n";
-    std::cout << "BPB_BytsPerSec: " << bpb->basic.BPB_BytsPerSec << " "<<sizeof(bpb->basic.BPB_BytsPerSec)<<"\n";
-    std::cout << "BPB_SecPerClus: " << (int)bpb->basic.BPB_SecPerClus << " "<<sizeof(bpb->basic.BPB_SecPerClus)<<"\n";
-    std::cout << "BPB_RsvdSecCnt: " << bpb->basic.BPB_RsvdSecCnt << " "<<sizeof(bpb->basic.BPB_RsvdSecCnt)<<"\n";
-    std::cout << "BPB_NumFATs: " << (int)bpb->basic.BPB_NumFATs <<  " "<<sizeof(bpb->basic.BPB_NumFATs)<<"\n";
-    std::cout << "BPB_RootEntCnt: " << bpb->basic.BPB_RootEntCnt << " "<<sizeof(bpb->basic.BPB_RootEntCnt)<<"\n";
-    std::cout << "BPB_TotSec16: " << bpb->basic.BPB_TotSec16 << " "<<sizeof(bpb->basic.BPB_TotSec16)<<"\n";
-    std::cout << "BPB_Media: " << (int)bpb->basic.BPB_Media <<" "<<sizeof(bpb->basic.BPB_Media)<< "\n";
-    std::cout << "BPB_FATSz16: " << bpb->basic.BPB_FATSz16 << " "<<sizeof(bpb->basic.BPB_FATSz16)<<"\n";
-    std::cout << "BPB_SecPerTrk: " << bpb->basic.BPB_SecPerTrk << " "<<sizeof(bpb->basic.BPB_SecPerTrk)<< "\n";
-    std::cout << "BPB_NumHeads: " << bpb->basic.BPB_NumHeads << " "<<sizeof(bpb->basic.BPB_NumHeads)<< "\n";
-    std::cout << "BPB_HiddSec: " << bpb->basic.BPB_HiddSec << " "<<sizeof(bpb->basic.BPB_HiddSec)<<  "\n";
-    std::cout << "BPB_TotSec32: " << bpb->basic.BPB_TotSec32 << " "<<sizeof(bpb->basic.BPB_TotSec32)<<"\n";
+    std::cout << "\nBS_OEMName: " << bpb->basic.BS_OEMName <<"\n";
+    std::cout << "BPB_BytsPerSec: " << bpb->basic.BPB_BytsPerSec <<"\n";
+    std::cout << "BPB_SecPerClus: " << (int)bpb->basic.BPB_SecPerClus <<"\n";
+    std::cout << "BPB_RsvdSecCnt: " << bpb->basic.BPB_RsvdSecCnt<<"\n";
+    std::cout << "BPB_NumFATs: " << (int)bpb->basic.BPB_NumFATs <<"\n";
+    std::cout << "BPB_RootEntCnt: " << bpb->basic.BPB_RootEntCnt <<"\n";
+    std::cout << "BPB_TotSec16: " << bpb->basic.BPB_TotSec16<<"\n";
+    std::cout << "BPB_Media: " << (int)bpb->basic.BPB_Media<< "\n";
+    std::cout << "BPB_FATSz16: " << bpb->basic.BPB_FATSz16<<"\n";
+    std::cout << "BPB_SecPerTrk: " << bpb->basic.BPB_SecPerTrk << "\n";
+    std::cout << "BPB_NumHeads: " << bpb->basic.BPB_NumHeads << "\n";
+    std::cout << "BPB_HiddSec: " << bpb->basic.BPB_HiddSec <<  "\n";
+    std::cout << "BPB_TotSec32: " << bpb->basic.BPB_TotSec32 <<"\n";
 
     std::string fileSysType(bpb->BS_FilSysType, 3);
-    std::cout << "BS_FilSysType: " << fileSysType << " "<<sizeof(bpb->BS_FilSysType)<<"\n";
+    std::cout << "BS_FilSysType: " << fileSysType <<"\n";
 
 }
 
@@ -312,9 +311,18 @@ int main(int argc, char* argv[]) {
 
     std::string imagePath = argv[1];
     bool fixErrors = false;
+    bool isImageFile = false; // Додатковий параметр для перевірки, чи працюємо з файлом-образом
 
     // Перевірка на наявність опції --fix
-    if (argc > 2 && std::string(argv[2]) == "/F") {
+    if (argc > 2 && std::string(argv[2])== "/F") {
+        fixErrors = true;
+    }else if(argc > 2 && std::string (argv[2]) == "--image"){
+        isImageFile = true;
+    }
+    // Перевірка, чи є аргумент для образу файлу
+    if (argc > 3 && std::string(argv[3]) == "/IM") {
+        isImageFile = true;
+    }else if (argc > 3 && std::string(argv[3]) == "/F"){
         fixErrors = true;
     }
 
