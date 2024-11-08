@@ -14,12 +14,12 @@
 #include "AnalyzersFAT16.hpp"
 #include "AnalyzersFAT32.hpp"
 #include "AnalyzersFAT12.hpp"
-int fd;
+FILE *fp;
 
 #define DEBUG_PRNT
 
 // Читання кореневої директорії
-bool readRootDirectory(int fd, uint16_t bytesPerSec, uint16_t resvdSecCnt, uint8_t numFATs, uint16_t FATSize, uint16_t rootEntCnt, std::vector<FAT16DirEntry>& rootDirEntries) {
+bool readRootDirectory(FILE *file, uint16_t bytesPerSec, uint16_t resvdSecCnt, uint8_t numFATs, uint16_t FATSize, uint16_t rootEntCnt, std::vector<FAT16DirEntry>& rootDirEntries) {
     // Обчислюємо початковий сектор кореневої директорії
     uint32_t firstRootDirSecNum = resvdSecCnt + (numFATs * FATSize);
 
@@ -33,7 +33,7 @@ bool readRootDirectory(int fd, uint16_t bytesPerSec, uint16_t resvdSecCnt, uint8
     uint8_t* rootDirData = new uint8_t[rootDirSize];
 
     // Позиціонуємося на початок кореневої директорії
-    if (lseek(fd, firstRootDirSecNum * bytesPerSec, SEEK_SET) == -1) {
+    if (fseek(file, firstRootDirSecNum * bytesPerSec, SEEK_SET) != 0) {
         perror("Failed to seek to the root directory");
         delete[] rootDirData;
         return false;
@@ -41,7 +41,7 @@ bool readRootDirectory(int fd, uint16_t bytesPerSec, uint16_t resvdSecCnt, uint8
 
 
     // Читаємо кореневу директорію
-    if (read(fd, rootDirData, rootDirSize) != rootDirSize) {
+    if (fread(rootDirData, 1, rootDirSize, file) != rootDirSize) {
         perror("Failed to read root directory");
         delete[] rootDirData;
         return false;
@@ -117,7 +117,7 @@ void printRootDirectoryEntries(const std::vector<FAT16DirEntry>& rootDirEntries)
 
 
 // Зчитування FAT таблиць
-bool readFAT16Tables(int fd, std::vector<uint16_t*>& FATs, int FATSize, int startSector, int numberOfFATs, uint16_t bytesPerSec) {
+bool readFAT16Tables(FILE *file, std::vector<uint16_t*>& FATs, int FATSize, int startSector, int numberOfFATs, uint16_t bytesPerSec) {
     #ifdef DEBUG_PRNT
     std::cout<< "---------------------------------"<<std::endl;
     std::cout<<"Trying to read FAT tables\n"<<std::endl;
@@ -132,8 +132,8 @@ bool readFAT16Tables(int fd, std::vector<uint16_t*>& FATs, int FATSize, int star
         std::cout << "Current position: "<< startFATPosition + FATSize*i*bytesPerSec << std::endl;
         #endif
         // Зчитування FAT таблиці
-        if (lseek(fd, startFATPosition + FATSize*i*bytesPerSec, SEEK_SET) == -1 ||
-            read(fd, FAT, FATSize * bytesPerSec) != FATSize * bytesPerSec) {
+        if (fseek(file, startFATPosition + FATSize*i*bytesPerSec, SEEK_SET) == -1 ||
+            fread( FAT, sizeof(uint16_t), FATSize * bytesPerSec / sizeof(uint16_t), file) != FATSize * bytesPerSec  / sizeof(uint16_t)) {
             perror("Failed to read FAT table");
             delete[] FAT; // Звільняємо пам'ять
             return false;
@@ -215,45 +215,48 @@ void printBasicFAT(extFAT12_16 *bpb) {
 }
 
 bool readBootSector(uint8_t *bootSector, int bootSector_size) {
-//    uint8_t bootSector[512]; // Буфер для завантажувального сектора
-    #ifdef DEBUG_PRNT
-    std::cout<<"Size of boot Sector: "<<bootSector_size<<std::endl;
+#ifdef DEBUG_PRNT
+    std::cout << "Size of boot Sector: " << bootSector_size << std::endl;
+    std::cout << "---------------------------------" << std::endl;
+    std::cout << "Trying to read boot sector" << std::endl;
+#endif
 
-    std::cout<< "---------------------------------"<<std::endl;
+    // Переміщення в початок файлу
+    if (fseek(fp, 0, SEEK_SET) != 0) {
+        perror("Failed to seek boot sector");
+        return false;
+    }
 
-    std::cout<<"trying to read boot sector"<<std::endl;
-
-    #endif
     // Зчитування завантажувального сектора
-    if (lseek(fd, 0, SEEK_SET) == -1 || read(fd, bootSector, bootSector_size) != bootSector_size) {
+    size_t bytesRead = fread(bootSector, 1, bootSector_size, fp);
+    if (bytesRead != bootSector_size) {
         perror("Failed to read boot sector");
         return false;
     }
-    #ifdef DEBUG_PRNT
-    std::cout<<"Successfully read boot sector"<<std::endl;
 
+#ifdef DEBUG_PRNT
+    std::cout << "Successfully read boot sector" << std::endl;
     std::cout << "Boot Sector Hex Dump:" << std::endl;
-    for (int i = 0; i < 512; i++) {
-        std::cout  <<bootSector[i] ;
+    for (int i = 0; i < bootSector_size; i++) {
+        std::cout << std::hex << (int)bootSector[i] << " ";
         if ((i + 1) % 16 == 0) std::cout << std::endl; // Вивід через кожні 16 байт
     }
-    std::cout<<std::dec;
-    #endif
+    std::cout << std::dec;
+#endif
 
     return true;
 }
 
-
-bool writeBootSector(int fd, uint8_t *bootSector, size_t bootSector_size) {
+bool writeBootSector(FILE *file, uint8_t *bootSector, size_t bootSector_size) {
 
     // Зміщення у початок файлу
-    if (lseek(fd, 0, SEEK_SET) == -1) {
+    if (fseek(file, 0, SEEK_SET) == -1) {
         perror("Failed to seek to the beginning of the file");
         return false;
     }
 
     // Запис даних у завантажувальний сектор
-    ssize_t bytes_written = write(fd, bootSector, bootSector_size);
+    ssize_t bytes_written = fwrite(bootSector, 1, bootSector_size, file);
     if (bytes_written != bootSector_size) {
         perror("Failed to write boot sector");
         return false;
@@ -273,7 +276,7 @@ void printFATTable(const uint16_t *FAT, int FATSize, uint16_t bytesPerSec) {
         std::cout << "Byte " << std::setw(5) << i << ": 0x"
                   << std::hex << std::setw(2) << std::setfill('0')
                   << static_cast<int>(FAT[i]) << std::dec << std::endl;
-        // Виведення по 16 байт
+        // Виведення по 16 біт
         if ((i + 1) % 16 == 0) {
             std::cout << std::endl; // Пустий рядок для відділення
         }
@@ -282,16 +285,16 @@ void printFATTable(const uint16_t *FAT, int FATSize, uint16_t bytesPerSec) {
 
 void fs_open(const char *path, int rw) {
     // Встановлення режиму відкриття
-    int mode = rw ? O_RDWR | O_BINARY : O_RDONLY | O_BINARY;
+    const char *mode = rw ? "rb+" : "rb";  // "rb+" для читання і запису, "rb" для читання
 
     // Відкриття диска
-    fd = open(path, mode);
-    if (fd < 0) {
-        perror("open");
+    fp = fopen(path, mode);
+    if (fp == NULL) {
+        perror("fopen");
         exit(EXIT_FAILURE);
     }
 
-    // Ваш код для роботи з fd...
+    // Ваш код для роботи з fp...
 }
 
 void printUsage() {
@@ -346,7 +349,7 @@ int main(int argc, char* argv[]) {
 
 
     if(!readBootSector(bootSector, 512)){
-        close(fd);
+        fclose(fp);
         std::cout<<"Can't read boot sector. Program was terminated. "<<std::endl;
         exit(EXIT_FAILURE);
     }
@@ -394,15 +397,15 @@ int main(int argc, char* argv[]) {
             const int numberOfFATs = bpb->basic.BPB_NumFATs; // Кількість FAT таблиць
 
             //Перевірка справності boot сектора
-            if (isBootFAT16Invalid(bpb)) {
+            if (isBootFAT16Invalid(bpb, fixErrors)) {
                 std::cout << "Boot sector is corrupted. Program was terminated." << std::endl;
                 exit(EXIT_FAILURE);
             }
 
 
             //Підвантаження FAT таблиць та їх перевірка
-            if (!readFAT16Tables(fd, FATs, FATSize, startFATSector, numberOfFATs, bytesPerSec)) {
-                close(fd);
+            if (!readFAT16Tables(fp, FATs, FATSize, startFATSector, numberOfFATs, bytesPerSec)) {
+                fclose(fp);
                 exit(EXIT_FAILURE);
             }
 //
@@ -412,16 +415,16 @@ int main(int argc, char* argv[]) {
 
             // Аналіз FAT таблиць
 
-            totalResult = totalResult && analyzeFAT16Tables(FATs, FATSize, bytesPerSec);
+            totalResult = totalResult && analyzeFAT16Tables(FATs, FATSize, bytesPerSec, fixErrors);
 
             #ifdef DEBUG_PRNT
             printFATTable(FATs[0], FATSize, bytesPerSec);
             #endif
 
             // Звільнення пам'яті
-            for (auto FAT : FATs) {
-                delete[] FAT;
-            }
+//            for (auto FAT : FATs) {
+//                delete[] FAT;
+//            }
 //            AnalyzeMainFAT16(bpb);
 //            AnalyzeCopyFAT16();
             std::vector<FAT16DirEntry> rootDirEntries;
@@ -431,7 +434,7 @@ int main(int argc, char* argv[]) {
             int rootStartSector = resvdSecCnt + numberOfFATs*FATSize;
             int dataRegionStartSector = rootStartSector + rootEntCnt*32/bytesPerSec;
 
-            if (readRootDirectory(fd, bytesPerSec, resvdSecCnt, numberOfFATs, FATSize, rootEntCnt, rootDirEntries)) {
+            if (readRootDirectory(fp, bytesPerSec, resvdSecCnt, numberOfFATs, FATSize, rootEntCnt, rootDirEntries)) {
                 #ifdef DEBUG_PRNT
                 std::cout << "Successfully read root directory." << std::endl;
                 #endif
@@ -443,7 +446,8 @@ int main(int argc, char* argv[]) {
             #endif
             // Виводимо к-сть root directories, директорій та файлів
             std::vector<FAT16DirEntry> dataDirEntries;
-            bool isRootValid = AnalyzeRootDir16(rootDirEntries, dataDirEntries);
+            std::vector<FileEntry> fileEntries;
+            bool isRootValid = AnalyzeRootDir16(rootDirEntries, dataDirEntries, fileEntries, fixErrors);
 
             totalResult = totalResult && isRootValid;
 
@@ -455,9 +459,18 @@ int main(int argc, char* argv[]) {
                     }
                     std::cout<<std::endl;
                 }
-                bool isDataValid = AnalyzeDiskData16(fd, bytesPerSec, sectorsPerClus, dataRegionStartSector, dataDirEntries);
+                bool isDataValid = AnalyzeDiskData16(fp, bytesPerSec, sectorsPerClus, dataRegionStartSector, dataDirEntries, fileEntries, fixErrors);
             }
 
+
+            analyzeClusterInvariants(FATs[0], FATSize*2, bytesPerSec, sectorsPerClus, fileEntries, fixErrors);
+            for (auto &FAT: FATs){
+                delete[] FAT;
+            }
+//            loadFAT16Table(FATs[0], FATSize);
+
+//            PrintFileEntries(fileEntries);
+//            std::cout<<"check: "<<FATs[0][0]<<std::endl;
             break;
         }
         case 32: {
@@ -499,7 +512,7 @@ int main(int argc, char* argv[]) {
 
 
     // Закриття дескриптора
-    close(fd);
+    fclose(fp);
 
 //    // Заглушка для аналізу файлової системи
 //    std::cout << "Analyzing file system image: " << imagePath << "\n";

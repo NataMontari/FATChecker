@@ -3,6 +3,7 @@
 #define FATCHECKER_FATSTRUCTS_HPP
 
 #include <cstdint>
+#include <vector>
 
 #pragma pack(push, 1)  // Забезпечує відсутність вирівнювання полів у структурі
 
@@ -97,6 +98,13 @@ struct LFNEntry {
     char name3[4];             // Останні 2 символи імені
 };
 
+// Структура для зберігання необхідних даних про файл
+struct FileEntry {
+    std::string fileName;
+    uint32_t firstCluster;
+    uint32_t fileSize; // Вказаний розмір файлу в байтах
+    std::vector<uint32_t> clusterChain; // Ланцюг кластерів
+};
 
 
 #pragma pack(pop)  // Повертає попереднє вирівнювання

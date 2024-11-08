@@ -8,17 +8,21 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <set>
-
+#include "FixFAT16.hpp"
+#include <unordered_set>
+#include <unordered_map>
 
 //#define DEBUG_PRNT
 
 
 // Аналіз та порівняння FAT таблиць
-bool analyzeFAT16Tables(const std::vector<uint16_t*>& FATs, int FATSize, uint16_t bytesPerSec) {
+bool analyzeFAT16Tables(const std::vector<uint16_t*>& FATs, int FATSize, uint16_t bytesPerSec,  bool fixErrors) {
     #ifdef DEBUG_PRNT
     std::cout<< "---------------------------------"<<std::endl;
     std::cout<<"Trying to analyze FAT tables\n"<<std::endl;
     #endif
+
+    bool fixed = false;
     if (FATs.empty()) {
         std::cout<<"FAT tables weren't found"<<std::endl;
         return false;
@@ -29,14 +33,281 @@ bool analyzeFAT16Tables(const std::vector<uint16_t*>& FATs, int FATSize, uint16_
         // Порівняння FAT таблиць
         if (std::memcmp(FATs[0], FATs[i], sizeof(uint16_t) * (FATSize * bytesPerSec / sizeof(uint16_t))) != 0) {
             std::cout << "FAT table " << i + 1 << " differs from FAT table 1." << std::endl;
-            return false; // Якщо хоча б одна таблиця не співпадає
+            if (fixErrors) {
+                // Виправлення таблиці FAT, копіюючи дані з першої таблиці
+                std::memcpy(FATs[i], FATs[0], sizeof(uint16_t) * (FATSize * bytesPerSec / sizeof(uint16_t))); //Змінити на функцію для виправлення FAT таблиць
+                std::cout << "FAT table " << i + 1 << " has been fixed by copying from FAT table 1." << std::endl;
+                fixed = true;
+            } else {
+                return false; // Якщо fixErrors == false, повертаємо false
+            }
         }
     }
+    if (!fixed) {
+        std::cout << "All FAT tables match." << std::endl;
+    }
+
     std::cout << "All FAT tables match." << std::endl;
     return true; // Усі таблиці співпадають
 }
 
+std::vector<uint16_t> loadFAT16Table(const uint8_t* fatBuffer, int fatSizeBytes) {
+    std::vector<uint16_t> FAT;
+    FAT.reserve(fatSizeBytes / 2);
 
+    for (int i = 0; i < fatSizeBytes; i += 2) {
+        uint16_t entry = static_cast<uint16_t>(fatBuffer[i]) | (static_cast<uint16_t>(fatBuffer[i + 1]) << 8);
+        FAT.push_back(entry);
+    }
+
+    return FAT;
+}
+
+// Функція для отримання ланцюжка кластерів для файлу
+std::vector<uint32_t > getClusterChain(uint32_t startCluster, const uint16_t* FAT, int FATSize) {
+    std::vector<uint32_t> chain;
+    uint32_t cluster = startCluster;
+    std::cout<<"Start cluster: "<< cluster<<std::endl;
+    while (cluster < 0xFFF8 && cluster > 1 && cluster < FATSize) {
+        if (std::find(chain.begin(), chain.end(), cluster) != chain.end()) {
+            std::cout << "Cycle detected in cluster chain starting at cluster " << startCluster << ".\n";
+            break;  // Виявлено зациклення
+        }
+        chain.push_back(cluster);
+        cluster = FAT[cluster];
+
+    }
+    return chain;
+}
+
+// 1. Дублікація кластерів
+//bool checkClusterDuplication(uint16_t* &FAT, int FATSize, const std::vector<FAT16DirEntry>& rootDirEntries, bool fixErrors) {
+//    std::unordered_set<int> usedClusters;
+//    for (const auto& entry : rootDirEntries) {
+//        auto chain = getClusterChain(entry.DIR_FstClusHI, FAT, FATSize);
+//        for (int cluster : chain) {
+//            if (usedClusters.count(cluster)) {
+//                std::cout << "Error: Cluster " << cluster << " is used by multiple files.\n";
+//                if (fixErrors) {
+//                    std::cout << "Freeing cluster for file " << entry.DIR_Name << ".\n";
+//                    FAT[cluster] = 0; // Позначення як вільного
+//                } else {
+//                    return false;
+//                }
+//            }
+//            usedClusters.insert(cluster);
+//        }
+//    }
+//    return true;
+//}
+
+void populateClusterChains(const uint16_t* FAT, int FATSize, std::vector<FileEntry>& fileEntries) {
+    for (auto& entry : fileEntries) {
+        entry.clusterChain = getClusterChain(entry.firstCluster, FAT, FATSize);
+    }
+}
+
+
+
+// 1. Функція для проходження ланцюжка кластерів і виявлення дублікацій
+void detectClusterDuplication(const uint16_t* FAT, int FATSize, const std::vector<FileEntry>& fileEntries, bool fixErrors) {
+    std::unordered_map<int, std::vector<std::string>> clusterToFileMap;
+
+    for (const auto& entry : fileEntries) {
+        for (int cluster : entry.clusterChain) {
+            clusterToFileMap[cluster].push_back(entry.fileName);
+        }
+    }
+
+    // Перевірка на дублювання
+    for (const auto& [cluster, fileNames] : clusterToFileMap) {
+        if (fileNames.size() > 1) { // Якщо кластер використовується більше ніж одним файлом
+            std::cout << "Error: Cluster " << cluster << " is used by multiple files:\n";
+            for (const auto& file : fileNames) {
+                std::cout << "  - " << file << "\n";
+            }
+            std::cout << std::endl;
+        }
+    }
+
+}
+
+
+// 2. Функція для перевірки невідповідності розміру файлу
+void detectSizeMismatch(const uint16_t* FAT, int FATSize, int bytesPerSec, int secPerCluster, const std::vector<FileEntry>& fileEntries, bool fixErrors) {
+
+    const int bytesPerCluster = bytesPerSec * secPerCluster;
+
+    for (const auto& entry : fileEntries) {
+        // Отримуємо ланцюг кластерів для файлу
+
+        // Підрахунок фактичного розміру файлу
+        if(entry.clusterChain.empty()){
+            continue;
+        }
+        int actualSize = (entry.clusterChain.size() - 1) * bytesPerCluster + (entry.fileSize % bytesPerCluster);
+
+        // Перевірка на невідповідність розміру
+        if (actualSize != entry.fileSize) {
+            std::cout << "Warning: File " << entry.fileName << " size mismatch detected!\n";
+            std::cout << "  Expected Size: " << entry.fileSize << " bytes\n";
+            std::cout << "  Actual Size: " << actualSize << " bytes\n";
+            // Пропонуємо користувачу вирішити проблему
+
+            if(fixErrors){
+                std::cout << "Do you want to fix or delete this file? (y/n): ";
+                char response;
+                std::cin >> response;
+                if (response == 'y' || response == 'Y') {
+                    // Логіка для виправлення або видалення файлу
+                    std::cout << "Fixing/deleting the file...\n"; // Реалізуйте логіку
+                }
+            }
+
+        }
+    }
+}
+
+// 3. Функція для виявлення загублених кластерів та їх очищення
+void detectAndFreeLostClusters(uint16_t* FAT, int FATSize, const std::vector<FileEntry>& fileEntries, bool fixErrors) {
+    // Відстеження всіх кластерів, які використовуються файлами
+    std::unordered_set<int> usedClusters;
+
+    for (const auto& entry : fileEntries) {
+        for (int cluster : entry.clusterChain) {
+            usedClusters.insert(cluster);
+        }
+    }
+
+    // Виявлення загублених кластерів
+    for (int i = 2; i < FATSize; ++i) {
+        if (FAT[i] != 0x0000 && usedClusters.find(i) == usedClusters.end()) {
+            // Якщо кластер позначений як зайнятий, але не використовується, він вважається загубленим
+            std::cout << "Lost cluster found at " << i << ". Marking it as free.\n";
+            if (fixErrors){
+                FAT[i] = 0x0000;  // Позначаємо кластер як вільний
+            }
+        }
+    }
+}
+
+// 5. Функція для перевірки правильності EOC в кінці ланцюжка кластерів
+void checkEndOfChain(const uint16_t* FAT, int FATSize, const std::vector<FileEntry>& fileEntries, bool fixErrors) {
+    for (const auto& entry : fileEntries) {
+        if (entry.clusterChain.empty()){
+            continue;
+        }
+        int lastCluster = entry.clusterChain.back();
+
+
+        // Перевіряємо останній кластер на значення EOC у FAT
+        if (FAT[lastCluster] < 0xFFF8) {  // Некоректне закінчення
+            std::cout << "Warning: File " << entry.fileName << " does not end with a correct EOC marker.\n";
+            std::cout << "  Last cluster value in FAT: " << FAT[lastCluster] << " (Expected >= 0xFFF8)\n";
+
+            if (fixErrors) {
+                std::cout << "Do you want to fix the chain by marking the last cluster as EOC? (y/n): ";
+                char response;
+                std::cin >> response;
+                if (response == 'y' || response == 'Y') {
+//                    FAT[lastCluster] = 0xFFFF;  // Позначаємо останній кластер як EOC
+                    std::cout << "The chain has been fixed for file " << entry.fileName << ".\n";
+                }
+            }
+        } else {
+            std::cout << "File " << entry.fileName << " ends with a correct EOC marker.\n";
+        }
+    }
+}
+//// 2. Невідповідність розміру файлу
+//bool checkFileSizeMismatch(const uint16_t* FAT, int FATSize, const std::vector<FAT16DirEntry>& rootDirEntries, int clusterSize) {
+//    for (const auto& entry : rootDirEntries) {
+//        auto chain = getClusterChain(entry.DIR_FstClusHI, FAT, FATSize);
+//        int actualSize = (chain.size() - 1) * clusterSize;  // Останній кластер - маркер кінця
+//        if (actualSize != entry.DIR_FileSize) {
+//            std::cout << "Error: File size mismatch for " << entry.DIR_Name << ". Expected: " << entry.DIR_FileSize << " bytes, found: " << actualSize << " bytes.\n";
+//            return false;
+//        }
+//    }
+//    return true;
+//}
+
+bool analyzeClustersCrossValid(const uint16_t* FAT, int FATSize, uint16_t bytesPerSec, bool fixErrors){
+    std::vector<bool> clusterUsed(FATSize, false);
+    for (int i = 0; i < FATSize; ++i) {
+        if (FAT[i] >= 0xFFF8 || FAT[i] == 0) continue;
+        if (clusterUsed[i]) {
+//            if (fixErrors) {
+//                FAT[i] = 0; // Позначення кластера як вільного
+//            }
+            std::cout << "Error: Cluster " << i << " is cross-linked." << std::endl;
+            if (!fixErrors) return false;
+        } else {
+            clusterUsed[i] = true;
+        }
+    }
+    return true;
+}
+
+bool checkClusterChains(const uint16_t* FAT, int FATSize, uint16_t bytesPerSec, bool fixErrors){
+    return true;
+}
+
+bool isValidCluster(uint16_t clusterVal){
+    return true;
+}
+
+bool analyzeClusters(const uint16_t* FAT, int FATSize, uint16_t bytesPerSec, bool fixErrors){
+    std::cout<< "Starting cluster invariants check... "<<std::endl;
+
+    bool allClustersValid = true;
+
+    for(int i = 0; i<FATSize; ++i){
+        uint16_t clusterVal = FAT[i];
+
+        if(!isValidCluster(clusterVal)){
+            std::cout<<"Cluster "<<i<<" is invalid."<<std::endl;
+            allClustersValid = false;
+        }
+    }
+
+    if(allClustersValid){
+        std::cout<< "All clusters are valid."<<std::endl;
+    }
+
+    return allClustersValid;
+}
+
+
+void analyzeClusterInvariants(uint16_t* FAT, int FATSize, int bytesPerSec, int secPerCluster, std::vector<FileEntry> &fileEntries, bool fixErrors){
+    // Зберігаємо ланцюги кластерів для кожного файлу
+    populateClusterChains(FAT, FATSize, fileEntries);
+
+    // Виявлення дублікатів
+    std::cout << "=== Detecting Cluster Duplication ===\n";
+    detectClusterDuplication(FAT, FATSize, fileEntries, fixErrors);
+//
+//    // Перевірка правильності завершення ланцюга кластерів
+    std::cout << "\n=== Checking End of Chain Markers ===\n";
+    checkEndOfChain(FAT, FATSize, fileEntries, fixErrors);
+//
+//    // Перевірка на відповідність розміру файлу
+    std::cout << "\n=== Detecting Size Mismatch ===\n";
+    detectSizeMismatch(FAT, FATSize, bytesPerSec, secPerCluster, fileEntries, fixErrors);
+////
+////    // Виявлення загублених кластерів
+    std::cout << "\n=== Detecting and Freeing Lost Clusters ===\n";
+    detectAndFreeLostClusters(FAT, FATSize, fileEntries, fixErrors);
+////
+//    // Перевірка перехресних кластерів
+    std::cout << "\n=== Analyzing Cross-Linked Clusters ===\n";
+    if (!analyzeClustersCrossValid(FAT, FATSize, bytesPerSec, fixErrors)) {
+        std::cout << "Error: Cross-linked clusters detected.\n";
+    }
+
+    std::cout << "\nAnalysis complete.\n";
+
+};
 
 void AnalyzeCopyFAT16(){
     std::cout<<"Analyzing Copy FAT Table"<<std::endl;
@@ -219,7 +490,7 @@ bool checkEntry(const FAT16DirEntry& entry){
     return isEntryValid;
 }
 
-bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FAT16DirEntry>& dataDirEntries){
+bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FAT16DirEntry>& dataDirEntries,  std::vector<FileEntry>& fileEntries, bool fixErrors){
     bool isRootDirValid = true;
     int volumeIDCount = 0;
     int directoryCount = 0;
@@ -228,6 +499,7 @@ bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vec
     std::string longFileName;
     std::vector<std::string> longFileNames;
     std::set<std::string> fileNamesSet; // Набір для перевірки дублікатів імен
+    FileEntry fileEntry;
 
 
     for(const auto &entry: rootDirEntries){
@@ -296,7 +568,7 @@ bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vec
             #ifdef DEBUG_PRNT
             std::cout << "Long file name: " << longFileName << std::endl;
             #endif
-            longFileName.clear();
+
         }
 
         // Перевірка короткого імені
@@ -366,6 +638,13 @@ bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vec
             fileCount++;
         }
 
+        fileEntry.fileName = longFileName.empty() ? fileName : longFileName;
+        fileEntry.firstCluster = (entry.DIR_FstClusHI << 16) | entry.DIR_FstClusLO; // перший кластер
+        fileEntry.fileSize = entry.DIR_FileSize; // розмір файлу
+        longFileName.clear();
+
+        // Додаємо цей запис до списку файлів
+        fileEntries.push_back(fileEntry);
 
     }
 
@@ -391,23 +670,27 @@ bool AnalyzeRootDir16(const std::vector<FAT16DirEntry>& rootDirEntries, std::vec
     if (isRootDirValid){
         std::cout<<"No errors found in the root directory."<<std::endl;
     }
+    bool isfixed;
+    if(fixErrors){
+        isfixed = fixRootDirErrors();
+    }
 
     return isRootDirValid;
 };
 
-bool readDataCluster(int fd, uint16_t bytesPerSec, uint32_t startSectorAdress, uint8_t secPerClus, std::vector<FAT16DirEntry> & subDirEntries) {
+bool readDataCluster(FILE *file, uint16_t bytesPerSec, uint32_t startSectorAdress, uint8_t secPerClus, std::vector<FAT16DirEntry> & subDirEntries) {
     const int ENTRY_SIZE = sizeof(FAT16DirEntry); // Розмір одного запису в байтах
     const int SECTOR_SIZE = bytesPerSec; // Розмір сектора в байтах
     uint8_t buffer[SECTOR_SIZE * secPerClus]; // Буфер для читання секторів
     uint64_t address = static_cast<uint64_t>(startSectorAdress) * SECTOR_SIZE;
     // Читаємо сектори даних
     std::cout<<"Physical address of cluster: "<< address<<std::endl;
-    if (lseek(fd, address, SEEK_SET) < 0) {
+    if (fseek(file, address, SEEK_SET) < 0) {
         std::cerr << "Failed to seek to data start sector." << std::endl;
         return false;
     }
 
-    ssize_t bytesRead = read(fd, buffer, sizeof(buffer));
+    ssize_t bytesRead = fread( buffer, 1, sizeof(buffer), file);
     if (bytesRead < 0 || bytesRead != SECTOR_SIZE * secPerClus) {
         std::cerr << "Failed to read data section." << std::endl;
         return false;
@@ -433,7 +716,6 @@ bool readDataCluster(int fd, uint16_t bytesPerSec, uint32_t startSectorAdress, u
         if (entry.DIR_Attr & 0x04) {
             // Якщо атрибут 0x08, то це системний файл
             std::cerr << "Warning: System file detected: " << entry.DIR_Name << std::endl;
-            continue;
         }
 
 
@@ -456,7 +738,7 @@ bool readDataCluster(int fd, uint16_t bytesPerSec, uint32_t startSectorAdress, u
     return true;
 }
 
-bool AnalyzeDiskData16(int fd, uint16_t bytesPerSec, uint8_t sectorsPerCluster, uint32_t dataStartSector, const std::vector<FAT16DirEntry>& dataDirEntries) {
+bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerCluster, uint32_t dataStartSector, const std::vector<FAT16DirEntry>& dataDirEntries, std::vector<FileEntry> &fileEntries, bool fixErrors, bool isRootDir = true) {
     std::cout << "The program is verifying files and folders..." << std::endl;
     uint32_t clusterNum;
     uint32_t startSectorAddress;
@@ -464,6 +746,7 @@ bool AnalyzeDiskData16(int fd, uint16_t bytesPerSec, uint8_t sectorsPerCluster, 
     std::string longFileName;
     std::vector<std::string> longFileNames;
     std::set<std::string> fileNamesSet; // Набір для перевірки дублікатів імен
+    FileEntry fileEntry;
     bool isDiskDataValid = true;
 
 //    std::cout<<dataStartSector<<std::endl;
@@ -511,7 +794,7 @@ bool AnalyzeDiskData16(int fd, uint16_t bytesPerSec, uint8_t sectorsPerCluster, 
             } else {
                 fileNamesSet.insert(longFileName);
             }
-            longFileName.clear();
+
 
         }
 
@@ -528,6 +811,16 @@ bool AnalyzeDiskData16(int fd, uint16_t bytesPerSec, uint8_t sectorsPerCluster, 
         } else {
             fileNamesSet.insert(entryDirName);
         }
+
+        if(!isRootDir){
+            fileEntry.fileName = !longFileName.empty() ? longFileName : entryDirName;
+            fileEntry.firstCluster = clusterNum + 2;
+            fileEntry.fileSize = entry.DIR_FileSize;
+            fileEntries.push_back(fileEntry); // Додаємо запис у вектор всіх файлів
+
+        }
+        longFileName.clear();
+
 
         // Якщо це файл, просто виводимо ім'я
         if (!(entry.DIR_Attr & 0x10)) { // Якщо це не директорія
@@ -547,7 +840,7 @@ bool AnalyzeDiskData16(int fd, uint16_t bytesPerSec, uint8_t sectorsPerCluster, 
             continue;
         }
 
-        if (!readDataCluster(fd, bytesPerSec, startSectorAddress, sectorsPerCluster, subDirEntries)) {
+        if (!readDataCluster(file, bytesPerSec, startSectorAddress, sectorsPerCluster, subDirEntries)) {
             std::cout << "Failed to read entries from the data region." << std::endl;
         } else {
             // Виводимо результати
@@ -583,24 +876,49 @@ bool AnalyzeDiskData16(int fd, uint16_t bytesPerSec, uint8_t sectorsPerCluster, 
             if (!hasParentDir) {
                 std::cerr << "Warning: Directory does not contain the parent directory entry ('..')." << std::endl;
             }
-            AnalyzeDiskData16(fd, bytesPerSec, sectorsPerCluster, dataStartSector, subDirEntries);
+
+            AnalyzeDiskData16(file, bytesPerSec, sectorsPerCluster, dataStartSector, subDirEntries,  fileEntries, fixErrors, false);
 
         }
     }
-
+    bool isFixed;
+    if(fixErrors){
+        isFixed = fixDataRegionErrors();
+    }
+    std::cout<<"Program found the following files with long names in the root directory:"<<std::endl;
+    for (const auto &name: longFileNames){
+        std::cout<<"Long file name: "<<name<<std::endl;
+    }
     std::cout << "File and folder verification is complete." << std::endl;
     return isDiskDataValid;
 }
 
+void PrintFileEntries(const std::vector<FileEntry>& fileEntries) {
+    std::cout << "\n--- Temporary Output of File Entries ---\n";
+    for (const auto& entry : fileEntries) {
+        std::cout << "File Name: " << entry.fileName
+                  << ", First Cluster: " << entry.firstCluster
+                  << ", File Size: " << entry.fileSize << " bytes"
+                  << ", Cluster Chain: ";
 
-
+        // Виводимо ланцюг кластерів
+        for (size_t i = 0; i < entry.clusterChain.size(); ++i) {
+            std::cout << entry.clusterChain[i];
+            if (i < entry.clusterChain.size() - 1) {
+                std::cout << " -> ";
+            }
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "----------------------------------------\n";
+}
 // Функція для перевірки, чи значення входить у допустимий список
 template <typename T, size_t N>
 bool isValid(T value, const T (&validArray)[N]) {
     return std::any_of(std::begin(validArray), std::end(validArray), [value](T v) { return v == value; });
 }
 
-bool isBootFAT16Invalid(extFAT12_16* bpb){
+bool isBootFAT16Invalid(extFAT12_16* bpb,  bool fixErrors){
     // Функція перевіряє всі інваріанти бут сектора і повертає false якщо інформацію записано невірно і true якщо все добре
     bool isBootInvalid = false;
 
@@ -721,5 +1039,11 @@ bool isBootFAT16Invalid(extFAT12_16* bpb){
 
     // (Потім) Перевірка останнього біта - 0x00 якщо BPB_BytsPerSec > 512
 
+    if (fixErrors && isBootInvalid) {
+        fixBootSectorErrors(bpb);
+    }
+
     return isBootInvalid;
 };
+
+

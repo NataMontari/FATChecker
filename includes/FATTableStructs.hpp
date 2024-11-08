@@ -38,4 +38,5 @@ enum FAT32Entry {
 
 
 
+
 #endif //FATCHECKER_FATTABLESTRUCTS_HPP

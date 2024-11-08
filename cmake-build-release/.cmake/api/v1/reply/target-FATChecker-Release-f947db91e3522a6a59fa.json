@@ -34,7 +34,7 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 17,
+				"line" : 20,
 				"parent" : 0
 			}
 		]
@@ -45,7 +45,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-g -fcolor-diagnostics"
+					"fragment" : "-O3 -DNDEBUG -fcolor-diagnostics"
 				}
 			],
 			"includes" : 
@@ -69,7 +69,8 @@
 				0,
 				3,
 				5,
-				6
+				6,
+				9
 			]
 		}
 	],
@@ -79,7 +80,7 @@
 		"commandFragments" : 
 		[
 			{
-				"fragment" : "-g",
+				"fragment" : "-O3 -DNDEBUG",
 				"role" : "flags"
 			},
 			{
@@ -109,7 +110,8 @@
 				0,
 				3,
 				5,
-				6
+				6,
+				9
 			]
 		},
 		{
@@ -120,7 +122,8 @@
 				2,
 				4,
 				7,
-				8
+				8,
+				10
 			]
 		}
 	],
@@ -173,6 +176,17 @@
 		{
 			"backtrace" : 1,
 			"path" : "includes/FATTableStructs.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "includes/FixFAT16.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "includes/FixFAT16.hpp",
 			"sourceGroupIndex" : 1
 		}
 	],
