@@ -921,7 +921,7 @@ bool isValid(T value, const T (&validArray)[N]) {
 bool isBootFAT16Invalid(extFAT12_16* bpb,  bool fixErrors){
     // Функція перевіряє всі інваріанти бут сектора і повертає false якщо інформацію записано невірно і true якщо все добре
     bool isBootInvalid = false;
-
+    BootSectorErrors bootSectorErrors;
     uint16_t bytsPerSec = bpb->basic.BPB_BytsPerSec;
     uint8_t secPerClus = bpb->basic.BPB_SecPerClus;
     uint8_t numFATs = bpb->basic.BPB_NumFATs;
@@ -949,30 +949,36 @@ bool isBootFAT16Invalid(extFAT12_16* bpb,  bool fixErrors){
     if (!(bpb->basic.BS_jmpBoot[0] == 0xEB && bpb->basic.BS_jmpBoot[2] == 0x90) && bpb->basic.BS_jmpBoot[0] != 0xE9){
         std::cerr << "Incorrect jump boot address"<<std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_JumpAddressInvalid = true;
     }
 
     // Перевіряємо розмір сектора
     if (!isValid(bytsPerSec, validSectorSizes) ){
         std::cerr << "Incorrect size of sectors: " << bytsPerSec << std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_BytsPerSecInvalid = true;
+
     }
 
     // Перевіряємо кількість секторів на кластер
     if (!isValid(secPerClus, validSecPerClus)) {
         std::cerr << "Incorrect number of sectors per cluster: " << (int)secPerClus << std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_SecPerClusInvalid = true;
     }
 
     // Перевіряємо кількість зарезервованих секторів
     if (rsvdSecCnt == 0) {
         std::cerr << "Incorrect number of reserved sectors: " << rsvdSecCnt << std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_RsvdSecCntInvalid = true;
     }
 
     // Перевіряємо кількість FAT-таблиць
     if (numFATs == 0) {
         std::cerr << "Incorrect number of FAT tables: " << (int)numFATs << std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_NumFATsInvalid = true;
     }
 
     // Перевіряємо BPB_RootEntCnt
@@ -980,34 +986,40 @@ bool isBootFAT16Invalid(extFAT12_16* bpb,  bool fixErrors){
     if (rootEntCnt == 0 || rootDirSize%bytsPerSec != 0 ){
         std::cerr << "Incorrect number of possible entries in the root directory: " <<(int)rootEntCnt<<std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_RootEntCntInvalid = true;
     }
 
     // Перевіряємо BPB_Media
     if (!isValid(media, validMedia)){
         std::cerr << "Invalid media type: "<< std::hex<<media<<std::dec<<std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_MediaInvalid = true;
     }
     // Перевіряємо к-сть секторів для однієї FAT таблиці
     if (fatSize == 0) {
         std::cerr << "Invalid FAT size: " << fatSize << std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_FATSz16Invalid = true;
     }
     // Перевіряємо к-сть секторів на трек
     if (secPerTrk == 0) {
         std::cerr << "Invalid sectors per track: " << secPerTrk << std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_SectorsPerTrackInvalid = true;
     }
 
     // Перевіряємо к-сть головок
     if (numHeads == 0) {
         std::cerr << "Invalid number of heads: " << numHeads << std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_NumHeadsInvalid = true;
     }
 
     // Перевіряємо загальну кількість секторів
     if (totSec32 < 65536 && totSec16 == 0){
         std::cerr << "Number of sectors can't be zero!" << std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_TotSec16Invalid = true;
     }
 
     // Перевіряємо к-сть секторів для всіх FAT таблиць
@@ -1015,24 +1027,28 @@ bool isBootFAT16Invalid(extFAT12_16* bpb,  bool fixErrors){
     if ((totSec32 != 0 && numOfSecsForFAT >= totSec32) || (totSec16 != 0 && numOfSecsForFAT >= totSec16)){
         std::cerr << "Number of sectors for FAT tables is equal or greater than number of all sectors"<<std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_NumFATsTooMuchInvalid = true;
     }
 
     // Перевіряємо BS_DrvNum
     if (drvNum != 0x80 && drvNum != 0x00) {
         std::cerr << "Invalid drive number: " << (int)drvNum << std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_DrvNumInvalid = true;
     }
 
     // Перевіряємо BS_Reserved1
     if (reserved1 != 0x00) {
         std::cerr << "Invalid reserved field: " << reserved1 << std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_BS_ReservedInvalid = true;
     }
 
     // Перевіряємо BS_BootSig =  0x29 якщо один з наступних = 0x00
     if (bootSig == 0x29 && bpb->BS_VolID == 0x00 && bpb->BS_VolLab[0] == 0x00) { // Assuming you have this in your struct
         std::cerr << "Invalid boot signature: " << (int)bootSig << std::endl;
         isBootInvalid = true;
+        bootSectorErrors.BPB_BootSigInvalid = true;
     }
 
     // (Потім) Перевірка Signature_word
@@ -1040,7 +1056,7 @@ bool isBootFAT16Invalid(extFAT12_16* bpb,  bool fixErrors){
     // (Потім) Перевірка останнього біта - 0x00 якщо BPB_BytsPerSec > 512
 
     if (fixErrors && isBootInvalid) {
-        fixBootSectorErrors(bpb);
+        fixBootSectorErrors(bpb, bootSectorErrors);
     }
 
     return isBootInvalid;
