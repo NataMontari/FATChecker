@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <cstring>
 #include <fcntl.h>
-#include <io.h>
+// #include <io.h>// для вінди (наступний закоментуєш а цей навпаки)
+#include <unistd.h> // для лінокса
 #include <iomanip> // Для std::hex
 #include <vector>
 #include <algorithm>
@@ -325,8 +326,6 @@ void fs_open(const char *path, int rw) {
         perror("fopen");
         exit(EXIT_FAILURE);
     }
-
-    // Ваш код для роботи з fp...
 }
 
 void printUsage() {
@@ -366,7 +365,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Fix errors: "<<fixErrors<<std::endl;
     #endif
     std::string drLetter = argv[1]; // GET THE RIGHT DEVICE
-    std::string device = ("\\\\.\\" + drLetter + ":");
+    std::string device = (drLetter);
     std::cout<<"Analyzing disk: "<<device<<std::endl;
 
     // Використання функції для відкриття фізичного диска
@@ -507,17 +506,67 @@ int main(int argc, char* argv[]) {
         }
         case 32: {
             std::cout << "The type of the file system is FAT32\n" << std::endl;
-            //Перевірка справності boot сектора
-            auto *bpb32 = (extFAT32 *) bootSector;
+
+            // посилання на структуру FAT32
+            extFAT32 *bpb32 = reinterpret_cast<extFAT32 *>(bpb);
+
+            //перевірка завантажувального сектора
             if (isBootFAT32Invalid(bpb32)) {
-                std::cout << "Boot sector is corrupted. Program was terminated." << std::endl;
+                std::cerr << "Boot sector is invalid. Terminating program.\n";
+                fclose(fp);
                 exit(EXIT_FAILURE);
             }
-            //Підвантаження FAT таблиць та їх перевірка
-            AnalyzeMainFAT32();
-            AnalyzeCopyFAT32();
-            AnalyzeRootDir32();
-            AnalyzeDiskData32();
+
+            const uint16_t bytesPerSec = bpb32->basic.BPB_BytsPerSec;
+            const uint8_t secPerClus = bpb32->basic.BPB_SecPerClus;
+            const uint16_t rsvdSecCnt = bpb32->basic.BPB_RsvdSecCnt;
+            const uint8_t numFATs = bpb32->basic.BPB_NumFATs;
+            const uint32_t fatSize32 = bpb32->BPB_FATSz32;
+            const uint32_t rootCluster = bpb32->BPB_RootClus;
+            const uint32_t dataStartSector = rsvdSecCnt + (numFATs * fatSize32);
+
+            std::vector<uint32_t*> FATs;
+
+            // підтягування FAT таблиць (+аналіз далі)
+            if (!readFAT32Tables(fp, FATs, fatSize32, rsvdSecCnt, numFATs, bytesPerSec)) {
+                fclose(fp);
+                exit(EXIT_FAILURE);
+            }
+            if (!analyzeFAT32Tables(FATs, fatSize32, bytesPerSec, fixErrors)) {
+                std::cerr << "FAT32 table analysis failed.\n";
+                fclose(fp);
+                for (auto FAT : FATs) delete[] FAT;
+                exit(EXIT_FAILURE);
+            }
+
+            // аналіз кореневої директорії
+            std::vector<FAT32DirEntry> rootDirEntries;
+            if (!AnalyzeRootDir32(fp, rootCluster, bytesPerSec, secPerClus, FATs[0], fatSize32, rootDirEntries, fixErrors)) {
+                std::cerr << "Root directory analysis failed.\n";
+                fclose(fp);
+                for (auto FAT : FATs) delete[] FAT;
+                exit(EXIT_FAILURE);
+            }
+
+            // аналіз даних (кластерів)
+            AnalyzeDiskData32(fp, bytesPerSec, secPerClus, dataStartSector, rootDirEntries, FATs[0], fatSize32, fixErrors);
+
+            // аналіз використання кластерів
+            std::vector<uint32_t> tempFAT(FATs[0], FATs[0] + fatSize32);
+            analyzeClusterUsage32(tempFAT, fatSize32, rootDirEntries, fixErrors);
+
+            // перевірка загублених кластерів
+            std::unordered_set<uint32_t> usedClusters;
+            for (const auto &entry : rootDirEntries) {
+                uint32_t firstCluster = (entry.DIR_FstClusHI << 16) | entry.DIR_FstClusLO;
+                if (firstCluster >= 2) {
+                    usedClusters.insert(firstCluster);
+                }
+            }
+            checkLostClusters(std::vector<uint32_t>(FATs[0], FATs[0] + fatSize32), fatSize32, usedClusters, fixErrors);
+
+            // звільнення пам'яті для FAT таблиць
+            for (auto FAT : FATs) delete[] FAT;
 
             break;
         }
