@@ -87,6 +87,7 @@ struct FAT16DirEntry {
 };
 
 
+
 struct FAT12DirEntry {
     char DIR_Name[11];      // Ім'я файлу
     union {
@@ -113,6 +114,22 @@ struct FAT12DirEntry {
     uint32_t DIR_FileSize;  // Розмір файлу
 };
 
+
+
+struct FAT32DirEntry {
+    char DIR_Name[11];      // Ім'я файлу
+    uint8_t DIR_Attr;       // Атрибути
+    uint8_t DIR_NTRes;      // Зарезервовано для NT
+    uint8_t DIR_CrtTimeTenth; // Десяті частки секунди створення
+    uint16_t DIR_CrtTime;   // Час створення
+    uint16_t DIR_CrtDate;   // Дата створення
+    uint16_t DIR_LstAccDate; // Дата останнього доступу
+    uint16_t DIR_FstClusHI; // Високий порядок першого кластера
+    uint16_t DIR_WrtTime;   // Час запису
+    uint16_t DIR_WrtDate;   // Дата запису
+    uint16_t DIR_FstClusLO; // Низький порядок першого кластера
+    uint32_t DIR_FileSize;  // Розмір файлу у байтах
+};
 
 // Структура LFN запису
 struct LFNEntry {
