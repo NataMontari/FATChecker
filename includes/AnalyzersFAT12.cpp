@@ -55,7 +55,7 @@ uint16_t getFAT12Entry(const uint8_t* FAT, int clusterIndex) {
     return entry;
 }
 
-std::vector<uint32_t> getClusterChain(uint32_t startCluster, const uint8_t* FAT, int FATSize) {
+std::vector<uint32_t> getClusterChain12(uint32_t startCluster, const uint8_t* FAT, int FATSize) {
     std::vector<uint32_t> chain;
     uint32_t cluster = startCluster;
 
@@ -70,7 +70,7 @@ std::vector<uint32_t> getClusterChain(uint32_t startCluster, const uint8_t* FAT,
     return chain;
 }
 
-void populateClusterChains(FAT12& fat, std::vector<FileEntry>& fileEntries) {
+void populateClusterChains12(FAT12& fat, std::vector<FileEntry>& fileEntries) {
     for (auto& file : fileEntries) {
         file.clusterChain.clear();
         int cluster = file.firstCluster;
@@ -83,7 +83,7 @@ void populateClusterChains(FAT12& fat, std::vector<FileEntry>& fileEntries) {
 }
 
 
-void detectClusterDuplication(FAT12& fat, std::vector<FileEntry>& fileEntries, bool fixErrors) {
+void detectClusterDuplication12(FAT12& fat, std::vector<FileEntry>& fileEntries, bool fixErrors) {
     std::unordered_map<int, std::vector<int>> clusterToFileMap;
 
     for (size_t fileIndex = 0; fileIndex < fileEntries.size(); ++fileIndex) {
@@ -113,7 +113,7 @@ void detectClusterDuplication(FAT12& fat, std::vector<FileEntry>& fileEntries, b
     }
 }
 
-void detectSizeMismatch(const uint8_t* FAT, int FATSize, int bytesPerSec, int secPerCluster, std::vector<FileEntry>& fileEntries, bool fixErrors) {
+void detectSizeMismatch12(const uint8_t* FAT, int FATSize, int bytesPerSec, int secPerCluster, std::vector<FileEntry>& fileEntries, bool fixErrors) {
     const int bytesPerCluster = bytesPerSec * secPerCluster;
 
     for (auto& entry : fileEntries) {
@@ -140,7 +140,7 @@ void detectSizeMismatch(const uint8_t* FAT, int FATSize, int bytesPerSec, int se
 }
 
 
-void checkEndOfChain(FAT12& fat, std::vector<FileEntry>& fileEntries, bool fixErrors) {
+void checkEndOfChain12(FAT12& fat, std::vector<FileEntry>& fileEntries, bool fixErrors) {
     for (auto& file : fileEntries) {
         int lastCluster = file.clusterChain.back();
         uint16_t entry = fat.getEntry(lastCluster);
@@ -154,7 +154,7 @@ void checkEndOfChain(FAT12& fat, std::vector<FileEntry>& fileEntries, bool fixEr
         }
     }
 }
-void detectAndFreeLostClusters(FAT12& fat, std::vector<FileEntry>& fileEntries, bool fixErrors) {
+void detectAndFreeLostClusters12(FAT12& fat, std::vector<FileEntry>& fileEntries, bool fixErrors) {
     std::unordered_set<int> usedClusters;
     for (const auto& file : fileEntries) {
         usedClusters.insert(file.clusterChain.begin(), file.clusterChain.end());
@@ -177,23 +177,23 @@ void analyzeClusterInvariants12(uint8_t* &FAT, int FATSize, int bytesPerSec, int
     // Зберігаємо ланцюги кластерів для кожного файлу
 
     FAT12 FATTable(FAT, FATSize);
-    populateClusterChains(FATTable, fileEntries);
+    populateClusterChains12(FATTable, fileEntries);
 
     // Виявлення дублікатів
     std::cout << "=== Detecting Cluster Duplication ===\n";
-    detectClusterDuplication(FATTable, fileEntries, fixErrors);
+    detectClusterDuplication12(FATTable, fileEntries, fixErrors);
 
     // Перевірка правильності завершення ланцюга кластерів
     std::cout << "\n=== Checking End of Chain Markers ===\n";
-    checkEndOfChain(FATTable, fileEntries, fixErrors);
+    checkEndOfChain12(FATTable, fileEntries, fixErrors);
 
     // Перевірка на відповідність розміру файлу
     std::cout << "\n=== Detecting Size Mismatch ===\n";
-    detectSizeMismatch(FAT, FATSize, bytesPerSec, secPerCluster, fileEntries, fixErrors);
+    detectSizeMismatch12(FAT, FATSize, bytesPerSec, secPerCluster, fileEntries, fixErrors);
 
     // Виявлення загублених кластерів
     std::cout << "\n=== Detecting and Freeing Lost Clusters ===\n";
-    detectAndFreeLostClusters(FATTable, fileEntries, fixErrors);
+    detectAndFreeLostClusters12(FATTable, fileEntries, fixErrors);
 
     std::cout << "\nAnalysis complete.\n";
 }
@@ -240,7 +240,7 @@ bool analyzeFAT12Tables(const std::vector<uint8_t*>& FATs, int FATSize, uint16_t
 
 
 
-bool isValidName(const std::string& name, int longNameFlag) {
+bool isValidName12(const std::string& name, int longNameFlag) {
     // FAT16 ім'я має бути рівно 11 символів (8 для імені і 3 для розширення)
     const char* validChars = "$%'-_@~`!(){}^#&.";  // Дозволені спеціальні символи
 
@@ -274,7 +274,7 @@ bool isValidName(const std::string& name, int longNameFlag) {
 }
 
 // Функція для злиття частин LFN
-std::string extractLFN(const LFNEntry& entry) {
+std::string extractLFN12(const LFNEntry& entry) {
     std::string name;
 
     // Додаємо перші 5 символів (name1)
@@ -299,7 +299,7 @@ std::string extractLFN(const LFNEntry& entry) {
 }
 
 // Основна функція для отримання довгого імені з FAT16 директорії
-std::string getLongFileName(const std::vector<FAT16DirEntry>& rootDirEntries) {
+std::string getLongFileName12(const std::vector<FAT16DirEntry>& rootDirEntries) {
     std::string longName;
     std::vector<std::string> parts; // Для зберігання частин довгого імені
 
@@ -312,7 +312,7 @@ std::string getLongFileName(const std::vector<FAT16DirEntry>& rootDirEntries) {
         }
         if (entry.DIR_Attr == 0x0F) {
             const auto* lfn = reinterpret_cast<const LFNEntry*>(&entry);
-            parts.push_back(extractLFN(*lfn));
+            parts.push_back(extractLFN12(*lfn));
         }
             // Якщо це основний запис файлу
         else if (!parts.empty()) {
@@ -330,7 +330,7 @@ std::string getLongFileName(const std::vector<FAT16DirEntry>& rootDirEntries) {
     return longName;
 }
 
-bool check_date(uint16_t date_value) {
+bool check_date12(uint16_t date_value) {
     // Перевірка на 0 (не підтримується)
     if (date_value == 0) {
         return true; // Ігноруємо перевірку
@@ -348,7 +348,7 @@ bool check_date(uint16_t date_value) {
     return true;
 }
 
-bool check_time(uint16_t time_value) {
+bool check_time12(uint16_t time_value) {
     // Перевірка на 0 (не підтримується)
     if (time_value == 0) {
         return true; // Ігноруємо перевірку
@@ -366,7 +366,7 @@ bool check_time(uint16_t time_value) {
     return true;
 }
 
-bool checkEntry(const FAT12DirEntry& entry){
+bool checkEntry12(const FAT12DirEntry& entry){
     bool isEntryValid = true;
     // Check reserved attribute
 
@@ -382,31 +382,31 @@ bool checkEntry(const FAT12DirEntry& entry){
         isEntryValid = false;
     }
     // Validate creation date
-    if (!check_date(entry.DIR_CrtDate)) {
+    if (!check_date12(entry.DIR_CrtDate)) {
         std::cout << "Error: Invalid creation date." << std::endl;
         isEntryValid = false;
     }
 
     // Validate last access date
-    if (!check_date(entry.DIR_LstAccDate)) {
+    if (!check_date12(entry.DIR_LstAccDate)) {
         std::cout << "Error: Invalid last access date." << std::endl;
         isEntryValid = false;
     }
 
     // Validate write date
-    if (!check_date(entry.DIR_WrtDate)) {
+    if (!check_date12(entry.DIR_WrtDate)) {
         std::cout << "Error: Invalid write date." << std::endl;
         isEntryValid = false;
     }
 
     // Validate creation time
-    if (!check_time(entry.DIR_CrtTime)) {
+    if (!check_time12(entry.DIR_CrtTime)) {
         std::cout << "Error: Invalid creation time." << std::endl;
         isEntryValid = false;
     }
 
     // Validate write time
-    if (!check_time(entry.DIR_WrtTime)) {
+    if (!check_time12(entry.DIR_WrtTime)) {
         std::cout << "Error: Invalid write time." << std::endl;
         isEntryValid = false;
     }
@@ -415,7 +415,7 @@ bool checkEntry(const FAT12DirEntry& entry){
     return isEntryValid;
 }
 
-bool isClusterValid(uint16_t cluster, uint16_t maxCluster) {
+bool isClusterValid12(uint16_t cluster, uint16_t maxCluster) {
     // Перевірка на заборонені значення для FAT12
     return !(cluster == 0 || cluster == 1 ||
              (cluster >= 0xFF7 && cluster <= 0xFFF) || // Враховуємо діапазон кластерів для FAT12
@@ -459,7 +459,7 @@ bool AnalyzeRootDir12(std::vector<FAT12DirEntry>& rootDirEntries, std::vector<FA
 
             if (fixErrors) {
                 uint16_t cluster = ((entry.DIR_FstClusHI & 0x0F) << 8) | entry.DIR_FstClusLO;
-                if (isClusterValid(cluster, 0xFF5)) {
+                if (isClusterValid12(cluster, 0xFF5)) {
                     std::cout << "Entry points to a valid cluster. Would you like to rename it? (y/n): ";
                     char response;
                     std::cin >> response;
@@ -493,7 +493,7 @@ bool AnalyzeRootDir12(std::vector<FAT12DirEntry>& rootDirEntries, std::vector<FA
 
             if (fixErrors) {
                 uint16_t cluster = ((entry.DIR_FstClusHI & 0x0F) << 8) | entry.DIR_FstClusLO;
-                if (isClusterValid(cluster, 0xFF5)) {
+                if (isClusterValid12(cluster, 0xFF5)) {
                     std::cout << "Entry points to a valid cluster. Would you like to rename it? (y/n): ";
                     char response;
                     std::cin >> response;
@@ -526,7 +526,7 @@ bool AnalyzeRootDir12(std::vector<FAT12DirEntry>& rootDirEntries, std::vector<FA
         // Якщо це LFN запис (атрибут = 0x0F), збираємо довге ім'я
         if (entry.DIR_Attr == 0x0F) {
             const auto* lfn = reinterpret_cast<const LFNEntry*>(&entry);
-            lfnParts.push_back(extractLFN(*lfn));
+            lfnParts.push_back(extractLFN12(*lfn));
             continue;
         }
 
@@ -539,7 +539,7 @@ bool AnalyzeRootDir12(std::vector<FAT12DirEntry>& rootDirEntries, std::vector<FA
             lfnParts.clear();  // Очищаємо частини імені після використання
 
             // Перевірка імені
-            if (!isValidName(longFileName, 1)) {
+            if (!isValidName12(longFileName, 1)) {
                 std::cout << "Error: Invalid long file name: " << longFileName << std::endl;
                 isRootDirValid = false;
             }
@@ -563,7 +563,7 @@ bool AnalyzeRootDir12(std::vector<FAT12DirEntry>& rootDirEntries, std::vector<FA
         // Перевірка короткого імені
         std::string fileName(entry.DIR_Name, 11);
 
-        if (!isValidName(fileName, 0)) {
+        if (!isValidName12(fileName, 0)) {
             std::cout << "Error: Invalid short file name: " << fileName << std::endl;
 
         }
@@ -575,7 +575,7 @@ bool AnalyzeRootDir12(std::vector<FAT12DirEntry>& rootDirEntries, std::vector<FA
 
         }
 
-        if(!checkEntry(entry)){
+        if(!checkEntry12(entry)){
             isRootDirValid = false;
         }
 
@@ -665,14 +665,10 @@ bool AnalyzeRootDir12(std::vector<FAT12DirEntry>& rootDirEntries, std::vector<FA
     }
     bool isfixed;
     if(fixErrors){
-        isfixed = fixRootDirErrors12();
+//        isfixed = fixRootDirErrors12();
     }
 
     return isRootDirValid;
-};
-
-bool fixRootDirErrors(){
-    return true;
 };
 
 
@@ -769,7 +765,7 @@ bool AnalyzeDiskData12(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
         // Якщо це LFN запис, збираємо частини імені
         if (entry.DIR_Attr == 0x0F) {
             const auto* lfn = reinterpret_cast<const LFNEntry*>(&entry);
-            lfnParts.push_back(extractLFN(*lfn));
+            lfnParts.push_back(extractLFN12(*lfn));
             continue;
         }
 
@@ -781,7 +777,7 @@ bool AnalyzeDiskData12(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
             lfnParts.clear();  // Очищаємо частини імені після використання
             longFileNames.push_back(longFileName);
             // Перевірка імені
-            if (!isValidName(longFileName, 1)) {
+            if (!isValidName12(longFileName, 1)) {
                 std::cout << "Error: Invalid long file name: " << longFileName << std::endl;
                 isDiskDataValid = false;
             }
@@ -798,7 +794,7 @@ bool AnalyzeDiskData12(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
         }
 
         // Перевірка імені
-        if (!isValidName(entryDirName, 1)) {
+        if (!isValidName12(entryDirName, 1)) {
             std::cout << "Error: Invalid long file name: " << longFileName << std::endl;
             isDiskDataValid = false;
         }

@@ -201,7 +201,7 @@ bool readDataCluster32(FILE *file, uint16_t bytesPerSec, uint32_t startCluster, 
 
 // Функція для аналізу кластера
 void analyzeClusterUsage32(std::vector<uint32_t>& FAT, uint32_t FATSize, const std::vector<FAT32DirEntry>& directoryEntries, bool fixErrors) {
-   std::cout << "=== Analyzing Cluster Usage ===\n";
+    std::cout << "=== Analyzing Cluster Usage ===\n";
 
     // Мапа для відстеження кластерів, що використовуються
     std::unordered_map<uint32_t, std::string> clusterToFileMap;
@@ -495,7 +495,7 @@ bool readFAT32Tables(FILE *file, std::vector<uint32_t*>& FATs, int FATSize, int 
             perror("Failed to read FAT32 table");
             delete[] FAT;
             return false;
-            }
+        }
         FATs.push_back(FAT);
     }
 
