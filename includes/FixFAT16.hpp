@@ -1,6 +1,4 @@
-//
-// Created by Kateryna on 24.10.2024.
-//
+
 
 #ifndef FATCHECKER_FIXFAT16_HPP
 #define FATCHECKER_FIXFAT16_HPP
@@ -29,5 +27,7 @@ struct BootSectorErrors {
 bool fixBootSectorErrors(extFAT12_16* bpb, BootSectorErrors &errors);
 bool fixRootDirErrors();
 bool fixDataRegionErrors();
+bool fixClusterErrors();
+
 
 #endif //FATCHECKER_FIXFAT16_HPP

@@ -6,7 +6,7 @@
 			[
 				{
 					"build" : ".",
-					"jsonFile" : "directory-.-Release-d0094a50bb2071803777.json",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.27"
@@ -19,7 +19,7 @@
 					]
 				}
 			],
-			"name" : "Release",
+			"name" : "Debug",
 			"projects" : 
 			[
 				{
@@ -39,7 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "FATChecker::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-FATChecker-Release-f947db91e3522a6a59fa.json",
+					"jsonFile" : "target-FATChecker-Debug-46dc34c5cb7e3d655a16.json",
 					"name" : "FATChecker",
 					"projectIndex" : 0
 				}
@@ -49,7 +49,7 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "D:/APPS_UCU/Projects/OS/FATChecker/cmake-build-release",
+		"build" : "D:/APPS_UCU/Projects/OS/FATChecker/cmake-build-debug",
 		"source" : "D:/APPS_UCU/Projects/OS/FATChecker"
 	},
 	"version" : 

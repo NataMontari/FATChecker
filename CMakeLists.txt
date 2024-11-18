@@ -15,6 +15,11 @@ add_executable(${PROJECT_NAME} main.cpp
         includes/FATTableStructs.hpp
         includes/FixFAT16.cpp
         includes/FixFAT16.hpp
+        includes/readFunctions.cpp
+        includes/readFunctions.hpp
+        includes/file.hpp
+        includes/file.cpp
+        FAT_fixer/FATFileSystem.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE includes)

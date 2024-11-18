@@ -2,6 +2,8 @@
 #ifndef FATCHECKER_FATTABLESTRUCTS_HPP
 #define FATCHECKER_FATTABLESTRUCTS_HPP
 
+#include <cstdint>
+
 typedef struct{
 
 } FATTable16;
@@ -36,7 +38,45 @@ enum FAT32Entry {
     FAT32_END_OF_FILE = 0xFFFFFFFF            // Кластер є останнім у файлі (кінець файлу)
 };
 
+// Структура для зручного доступу до FAT12-енетрів
+struct FAT12 {
+    uint8_t* FATData;  // Вказівник на дані FAT
+    int FATSize;       // Розмір FAT в байтах
 
+    FAT12(uint8_t* data, int size) : FATData(data), FATSize(size) {}
+
+    // Читання FAT12-ендрі для заданого кластеру
+    uint16_t getEntry(int clusterIndex) {
+        int byteOffset = clusterIndex * 3 / 2;
+        int bitOffset = (clusterIndex & 1) * 8;
+
+        uint16_t entry = FATData[byteOffset] | (FATData[byteOffset + 1] << 8);
+        entry >>= bitOffset;
+
+        if (bitOffset == 8) {
+            entry &= 0x0FFF;  // Маскуємо зайві біти для 12 біт
+        }
+
+        return entry;
+    }
+
+    // Запис значення в FAT12
+    void setEntry(int clusterIndex, uint16_t value) {
+        int byteOffset = clusterIndex * 3 / 2;
+        int bitOffset = (clusterIndex & 1) * 8;
+
+        if (bitOffset == 0) {
+            FATData[byteOffset] = value & 0xFF;
+            FATData[byteOffset + 1] = (value >> 8) & 0xFF;
+        } else {
+            FATData[byteOffset] = (value << 4) & 0xFF;
+            FATData[byteOffset + 1] = (value >> 4) & 0xFF;
+        }
+    }
+    void freeCluster(int cluster) {
+        setEntry(cluster, 0x000); // Позначаємо кластер як вільний
+    }
+};
 
 
 #endif //FATCHECKER_FATTABLESTRUCTS_HPP

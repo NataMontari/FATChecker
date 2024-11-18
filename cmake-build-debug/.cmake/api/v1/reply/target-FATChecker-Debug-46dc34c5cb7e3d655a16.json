@@ -34,7 +34,7 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 20,
+				"line" : 25,
 				"parent" : 0
 			}
 		]
@@ -45,7 +45,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-O3 -DNDEBUG -fcolor-diagnostics"
+					"fragment" : "-g -fcolor-diagnostics"
 				}
 			],
 			"includes" : 
@@ -70,7 +70,10 @@
 				3,
 				5,
 				6,
-				9
+				9,
+				11,
+				14,
+				15
 			]
 		}
 	],
@@ -80,7 +83,7 @@
 		"commandFragments" : 
 		[
 			{
-				"fragment" : "-O3 -DNDEBUG",
+				"fragment" : "-g",
 				"role" : "flags"
 			},
 			{
@@ -111,7 +114,10 @@
 				3,
 				5,
 				6,
-				9
+				9,
+				11,
+				14,
+				15
 			]
 		},
 		{
@@ -123,7 +129,9 @@
 				4,
 				7,
 				8,
-				10
+				10,
+				12,
+				13
 			]
 		}
 	],
@@ -188,6 +196,34 @@
 			"backtrace" : 1,
 			"path" : "includes/FixFAT16.hpp",
 			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "includes/readFunctions.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "includes/readFunctions.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "includes/file.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "includes/file.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "FAT_fixer/FATFileSystem.cpp",
+			"sourceGroupIndex" : 0
 		}
 	],
 	"type" : "EXECUTABLE"

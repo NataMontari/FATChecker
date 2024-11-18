@@ -3,7 +3,5 @@
 28	573	7527140598323147	CMakeFiles/FATChecker.dir/includes/AnalyzersFAT12.cpp.obj	d95cad6cc5dc95e6
 41	574	7527140598333107	CMakeFiles/FATChecker.dir/includes/AnalyzersFAT32.cpp.obj	9b5c3bd72cf08114
 0	770	7527140600296571	CMakeFiles/FATChecker.dir/main.cpp.obj	5c26bdf028cd6175
-14	1306	7527140605648629	CMakeFiles/FATChecker.dir/includes/AnalyzersFAT16.cpp.obj	5ee9dbed8933b832
-1307	1421	7527140606794804	FATChecker.exe	476ed41edac7b8a
 2	1192	7527141786364866	CMakeFiles/FATChecker.dir/includes/AnalyzersFAT16.cpp.obj	5ee9dbed8933b832
 1192	1313	7527141787580801	FATChecker.exe	476ed41edac7b8a

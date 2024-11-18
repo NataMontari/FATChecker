@@ -43,7 +43,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "Release"
+			"value" : "Debug"
 		},
 		{
 			"name" : "CMAKE_CACHEFILE_DIR",
@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "d:/APPS_UCU/Projects/OS/FATChecker/cmake-build-release"
+			"value" : "d:/APPS_UCU/Projects/OS/FATChecker/cmake-build-debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -151,10 +151,10 @@
 				},
 				{
 					"name" : "HELPSTRING",
-					"value" : "CXX compiler"
+					"value" : "No help, variable specified on the command line."
 				}
 			],
-			"type" : "STRING",
+			"type" : "UNINITIALIZED",
 			"value" : "C:/msys64/mingw64/bin/clang++.exe"
 		},
 		{
@@ -311,10 +311,10 @@
 				},
 				{
 					"name" : "HELPSTRING",
-					"value" : "C compiler"
+					"value" : "No help, variable specified on the command line."
 				}
 			],
-			"type" : "STRING",
+			"type" : "UNINITIALIZED",
 			"value" : "C:/msys64/mingw64/bin/clang.exe"
 		},
 		{
@@ -607,7 +607,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/APPS_UCU/Projects/OS/FATChecker/cmake-build-release/CMakeFiles/pkgRedirects"
+			"value" : "D:/APPS_UCU/Projects/OS/FATChecker/cmake-build-debug/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -1311,7 +1311,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/APPS_UCU/Projects/OS/FATChecker/cmake-build-release"
+			"value" : "D:/APPS_UCU/Projects/OS/FATChecker/cmake-build-debug"
 		},
 		{
 			"name" : "FATChecker_IS_TOP_LEVEL",
