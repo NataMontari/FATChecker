@@ -478,7 +478,7 @@ int main(int argc, char* argv[]) {
             extFAT32 *bpb32 = reinterpret_cast<extFAT32 *>(bpb);
 
             //перевірка завантажувального сектора
-            if (isBootFAT32Invalid(bpb32)) {
+            if (isBootFAT32Invalid(bpb32, fixErrors)) {
                 std::cerr << "Boot sector is invalid. Terminating program.\n";
                 fclose(fp);
                 exit(EXIT_FAILURE);

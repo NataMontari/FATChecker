@@ -129,6 +129,30 @@ FATChecker/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/build
 .PHONY : FATChecker/fast
 
+FAT_fixer/FATFileSystem.o: FAT_fixer/FATFileSystem.cpp.o
+.PHONY : FAT_fixer/FATFileSystem.o
+
+# target to build an object file
+FAT_fixer/FATFileSystem.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.o
+.PHONY : FAT_fixer/FATFileSystem.cpp.o
+
+FAT_fixer/FATFileSystem.i: FAT_fixer/FATFileSystem.cpp.i
+.PHONY : FAT_fixer/FATFileSystem.i
+
+# target to preprocess a source file
+FAT_fixer/FATFileSystem.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.i
+.PHONY : FAT_fixer/FATFileSystem.cpp.i
+
+FAT_fixer/FATFileSystem.s: FAT_fixer/FATFileSystem.cpp.s
+.PHONY : FAT_fixer/FATFileSystem.s
+
+# target to generate assembly for a file
+FAT_fixer/FATFileSystem.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.s
+.PHONY : FAT_fixer/FATFileSystem.cpp.s
+
 includes/AnalyzersFAT12.o: includes/AnalyzersFAT12.cpp.o
 .PHONY : includes/AnalyzersFAT12.o
 
@@ -225,6 +249,54 @@ includes/FixFAT16.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/includes/FixFAT16.cpp.s
 .PHONY : includes/FixFAT16.cpp.s
 
+includes/file.o: includes/file.cpp.o
+.PHONY : includes/file.o
+
+# target to build an object file
+includes/file.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/includes/file.cpp.o
+.PHONY : includes/file.cpp.o
+
+includes/file.i: includes/file.cpp.i
+.PHONY : includes/file.i
+
+# target to preprocess a source file
+includes/file.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/includes/file.cpp.i
+.PHONY : includes/file.cpp.i
+
+includes/file.s: includes/file.cpp.s
+.PHONY : includes/file.s
+
+# target to generate assembly for a file
+includes/file.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/includes/file.cpp.s
+.PHONY : includes/file.cpp.s
+
+includes/readFunctions.o: includes/readFunctions.cpp.o
+.PHONY : includes/readFunctions.o
+
+# target to build an object file
+includes/readFunctions.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.o
+.PHONY : includes/readFunctions.cpp.o
+
+includes/readFunctions.i: includes/readFunctions.cpp.i
+.PHONY : includes/readFunctions.i
+
+# target to preprocess a source file
+includes/readFunctions.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.i
+.PHONY : includes/readFunctions.cpp.i
+
+includes/readFunctions.s: includes/readFunctions.cpp.s
+.PHONY : includes/readFunctions.s
+
+# target to generate assembly for a file
+includes/readFunctions.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.s
+.PHONY : includes/readFunctions.cpp.s
+
 main.o: main.cpp.o
 .PHONY : main.o
 
@@ -258,6 +330,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... FATChecker"
+	@echo "... FAT_fixer/FATFileSystem.o"
+	@echo "... FAT_fixer/FATFileSystem.i"
+	@echo "... FAT_fixer/FATFileSystem.s"
 	@echo "... includes/AnalyzersFAT12.o"
 	@echo "... includes/AnalyzersFAT12.i"
 	@echo "... includes/AnalyzersFAT12.s"
@@ -270,6 +345,12 @@ help:
 	@echo "... includes/FixFAT16.o"
 	@echo "... includes/FixFAT16.i"
 	@echo "... includes/FixFAT16.s"
+	@echo "... includes/file.o"
+	@echo "... includes/file.i"
+	@echo "... includes/file.s"
+	@echo "... includes/readFunctions.o"
+	@echo "... includes/readFunctions.i"
+	@echo "... includes/readFunctions.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

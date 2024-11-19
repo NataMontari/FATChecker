@@ -81,12 +81,12 @@ clean: CMakeFiles/FATChecker.dir/clean
 CMakeFiles/FATChecker.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FATChecker.dir/build.make CMakeFiles/FATChecker.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/vbronetskyi/OS/FATChecker/cmake-build-release/CMakeFiles --progress-num=1,2,3,4,5,6 "Built target FATChecker"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/vbronetskyi/OS/FATChecker/cmake-build-release/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9 "Built target FATChecker"
 .PHONY : CMakeFiles/FATChecker.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/FATChecker.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/vbronetskyi/OS/FATChecker/cmake-build-release/CMakeFiles 6
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/vbronetskyi/OS/FATChecker/cmake-build-release/CMakeFiles 9
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/FATChecker.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/vbronetskyi/OS/FATChecker/cmake-build-release/CMakeFiles 0
 .PHONY : CMakeFiles/FATChecker.dir/rule

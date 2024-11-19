@@ -205,4 +205,7 @@ CMakeFiles/FATChecker.dir/includes/AnalyzersFAT16.cpp.o: \
  /usr/include/c++/13/bits/hashtable_policy.h \
  /usr/include/c++/13/bits/enable_special_members.h \
  /usr/include/c++/13/unordered_map \
- /usr/include/c++/13/bits/unordered_map.h
+ /usr/include/c++/13/bits/unordered_map.h \
+ /home/vbronetskyi/OS/FATChecker/includes/AnalyzersFAT16.hpp \
+ /home/vbronetskyi/OS/FATChecker/includes/readFunctions.hpp \
+ /home/vbronetskyi/OS/FATChecker/includes/file.hpp

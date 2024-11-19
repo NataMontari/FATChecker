@@ -39,7 +39,6 @@ bool analyzeFAT32Tables(const std::vector<uint32_t*>& FATs, int FATSize, uint16_
     return true;
 }
 
-// завантаження FAT таблиці у вектор
 std::vector<uint32_t> loadFAT32Table(const uint8_t* fatBuffer, int fatSizeBytes) {
     std::vector<uint32_t> FAT;
     FAT.reserve(fatSizeBytes / 4);
@@ -58,10 +57,9 @@ std::vector<uint32_t> loadFAT32Table(const uint8_t* fatBuffer, int fatSizeBytes)
 void AnalyzeMainFAT32(const uint8_t* fatBuffer, const std::vector<uint8_t*>& fatCopies, int fatSize, uint16_t bytesPerSec, bool fixErrors) {
     std::cout << "Analyzing Main FAT32 Table...\n";
 
-    // Завантаження основної FAT таблиці
     std::vector<uint32_t> mainFAT = loadFAT32Table(fatBuffer, fatSize * bytesPerSec);
 
-    // Завантаження копій FAT таблиць
+    // завантаження копій FAT таблиць
     std::vector<uint32_t*> FATs;
     FATs.push_back(mainFAT.data());
     for (auto* copy : fatCopies) {
@@ -69,7 +67,6 @@ void AnalyzeMainFAT32(const uint8_t* fatBuffer, const std::vector<uint8_t*>& fat
         FATs.push_back(fatCopy.data());
     }
 
-    // Аналіз таблиць
     bool result = analyzeFAT32Tables(FATs, fatSize, bytesPerSec, fixErrors);
     if (result) {
         std::cout << "FAT32 table analysis complete: No inconsistencies found.\n";
@@ -81,87 +78,12 @@ void AnalyzeMainFAT32(const uint8_t* fatBuffer, const std::vector<uint8_t*>& fat
 void AnalyzeCopyFAT32(){
     std::cout<<"Analyzing Copy FAT Table"<<std::endl;
 };
-bool AnalyzeRootDir32(FILE *file, uint32_t rootCluster, uint16_t bytesPerSec, uint8_t secPerClus, const uint32_t *FAT, uint32_t FATSize, std::vector<FAT32DirEntry>& rootDirEntries, bool fixErrors) {
-    std::cout << "=== Analyzing Root Directory in FAT32 ===\n";
 
-    const int ENTRY_SIZE = sizeof(FAT32DirEntry);  // Розмір одного запису
-    const uint32_t bytesPerCluster = bytesPerSec * secPerClus;  // Розмір одного кластера
-    uint8_t buffer[bytesPerCluster];  // Буфер для зчитування кластерів
-    uint32_t currentCluster = rootCluster;  // Поточний кластер
-    bool isRootValid = true;
-    std::set<std::string> fileNamesSet;  // Для перевірки дублювання імен
 
-    while (currentCluster < 0xFFFFFF8) {  // Поки кластер не є кінцевим маркером
-        // Позиціювання у файл для зчитування
-        uint32_t startSector = currentCluster * secPerClus;
-        uint64_t address = startSector * bytesPerSec;
-
-        if (fseek(file, address, SEEK_SET) < 0) {
-            std::cerr << "Failed to seek to root directory cluster: " << currentCluster << "\n";
-            isRootValid = false;
-            break;
-        }
-
-        // Зчитування кластеру
-        if (fread(buffer, 1, bytesPerCluster, file) != bytesPerCluster) {
-            std::cerr << "Failed to read root directory cluster: " << currentCluster << "\n";
-            isRootValid = false;
-            break;
-        }
-
-        // Обробка записів у кластері
-        for (int i = 0; i < bytesPerCluster; i += ENTRY_SIZE) {
-            FAT32DirEntry entry;
-            std::memcpy(&entry, buffer + i, ENTRY_SIZE);
-
-            if (entry.DIR_Name[0] == 0x00) {  // Порожній запис (кінець)
-                break;
-            }
-
-            if (static_cast<unsigned char>(entry.DIR_Name[0]) == 0xE5) {  // Видалений запис
-                continue;
-            }
-
-            if (entry.DIR_Attr == 0x0F) {  // Довге ім'я файлу (LFN)
-                continue;  // Обробка довгих імен окремо
-            }
-
-            // Перевірка дублювання імен
-            std::string fileName(entry.DIR_Name, 11);
-            fileName.erase(std::remove(fileName.begin(), fileName.end(), ' '), fileName.end());
-            if (fileNamesSet.find(fileName) != fileNamesSet.end()) {
-                std::cerr << "Duplicate file name found: " << fileName << "\n";
-                isRootValid = false;
-                continue;
-            }
-            fileNamesSet.insert(fileName);
-
-            // Додавання запису до вектора
-            rootDirEntries.push_back(entry);
-
-            // Перевірка атрибутів
-            if ((entry.DIR_Attr & 0x3F) == 0) {  // Невалідні атрибути
-                std::cerr << "Invalid attribute detected for entry: " << fileName << "\n";
-                isRootValid = false;
-            }
-        }
-
-        // Переходимо до наступного кластера
-        currentCluster = FAT[currentCluster];
-    }
-
-    if (isRootValid) {
-        std::cout << "Root directory is valid.\n";
-    } else {
-        std::cerr << "Errors detected in the root directory.\n";
-    }
-
-    return isRootValid;
-}
 bool readDataCluster32(FILE *file, uint16_t bytesPerSec, uint32_t startCluster, uint8_t secPerClus, uint32_t dataStartSector, std::vector<FAT32DirEntry> &entries) {
-    const int ENTRY_SIZE = sizeof(FAT32DirEntry); // Розмір одного запису в байтах
-    const int clusterSize = bytesPerSec * secPerClus; // Розмір одного кластера
-    uint8_t buffer[clusterSize]; // Буфер для зчитування кластера
+    const int ENTRY_SIZE = sizeof(FAT32DirEntry); // розмір одного запису в байтах
+    const int clusterSize = bytesPerSec * secPerClus; // розмір одного кластера
+    uint8_t buffer[clusterSize]; // буфер для зчитування кластера
 
     uint64_t address = (dataStartSector + (startCluster - 2) * secPerClus) * bytesPerSec;
 
@@ -171,13 +93,12 @@ bool readDataCluster32(FILE *file, uint16_t bytesPerSec, uint32_t startCluster, 
         return false;
     }
 
-    // Зчитуємо кластер
     if (fread(buffer, 1, clusterSize, file) != clusterSize) {
         std::cerr << "Failed to read cluster #" << startCluster << ".\n";
         return false;
     }
 
-    // Обробляємо записи в кластері
+    // обробляємо записи в кластері
     for (int i = 0; i < clusterSize / ENTRY_SIZE; ++i) {
         FAT32DirEntry entry;
         std::memcpy(&entry, buffer + i * ENTRY_SIZE, ENTRY_SIZE);
@@ -199,11 +120,70 @@ bool readDataCluster32(FILE *file, uint16_t bytesPerSec, uint32_t startCluster, 
     return true;
 }
 
-// Функція для аналізу кластера
+bool AnalyzeRootDir32(FILE *file, uint32_t rootCluster, uint16_t bytesPerSec, uint8_t secPerClus, const uint32_t *FAT, uint32_t FATSize, std::vector<FAT32DirEntry>& rootDirEntries, bool fixErrors) {
+    std::cout << "=== Analyzing Root Directory (FAT32) ===" << std::endl;
+
+    // Зчитуємо записи кореневого каталогу
+    if (!readDataCluster32(file, bytesPerSec, rootCluster, secPerClus, rootCluster * bytesPerSec, rootDirEntries)) {
+        std::cerr << "Failed to read root directory cluster." << std::endl;
+        return false;
+    }
+
+    std::unordered_set<std::string> fileNamesSet; // унікальності імен
+    bool isRootDirValid = true;
+
+    for (auto &entry : rootDirEntries) {
+        if (entry.DIR_Name[0] == 0x00) {
+            break; // порожній запис
+        }
+
+        if (static_cast<unsigned char>(entry.DIR_Name[0]) == 0xE5) {
+            continue; // видалений запис
+        }
+
+        std::string entryName(reinterpret_cast<const char *>(entry.DIR_Name), 11);
+        entryName = entryName.substr(0, entryName.find(' '));
+
+        // аналіз LFN записів
+        if (entry.DIR_Attr == 0x0F) {
+            // пропускаємо, якщо це частина LFN
+            continue;
+        }
+
+        // коротке імя
+        if (fileNamesSet.find(entryName) != fileNamesSet.end()) {
+            std::cerr << "Error: Duplicate file name found: " << entryName << std::endl;
+            isRootDirValid = false;
+        } else {
+            fileNamesSet.insert(entryName);
+        }
+
+        // перевірка кластерів
+        uint32_t firstCluster = (entry.DIR_FstClusHI << 16) | entry.DIR_FstClusLO;
+        if (firstCluster < 2 || firstCluster >= FATSize) {
+            std::cerr << "Error: Invalid cluster number for file " << entryName << std::endl;
+            isRootDirValid = false;
+            if (fixErrors) {
+                entry.DIR_Name[0] = 0xE5; // позначаємо запис як видалений
+                std::cout << "Fixed: Marked entry as deleted." << std::endl;
+            }
+        }
+    }
+
+    if (isRootDirValid) {
+        std::cout << "Root directory is valid." << std::endl;
+    } else {
+        std::cerr << "Errors detected in the root directory." << std::endl;
+    }
+
+    return isRootDirValid;
+}
+
+// функція для аналізу кластера
 void analyzeClusterUsage32(std::vector<uint32_t>& FAT, uint32_t FATSize, const std::vector<FAT32DirEntry>& directoryEntries, bool fixErrors) {
     std::cout << "=== Analyzing Cluster Usage ===\n";
 
-    // Мапа для відстеження кластерів, що використовуються
+    // мапа для відстеження кластерів, що використовуються
     std::unordered_map<uint32_t, std::string> clusterToFileMap;
     std::unordered_set<uint32_t> usedClusters;
     std::unordered_set<uint32_t> freeClusters;
@@ -340,7 +320,7 @@ bool isValid(T value, const T (&validArray)[N]) {
     return std::any_of(std::begin(validArray), std::end(validArray), [value](T v) { return v == value; });
 }
 
-bool isBootFAT32Invalid(extFAT32* bpb){
+bool isBootFAT32Invalid(extFAT32* bpb,  bool fixErrors){
     // функція перевіряє всі інваріанти бут сектора і повертає false якщо інформацію записано невірно і true якщо все добре
     bool isBootInvalid = false;
 
@@ -387,13 +367,13 @@ bool isBootFAT32Invalid(extFAT32* bpb){
         isBootInvalid = true;
     }
 
-    // Перевіряємо к-сть зарезервованих секторів
+    // перевіряємо к-сть зарезервованих секторів
     if (rsvdSecCnt == 0) {
         std::cerr << "Incorrect number of reserved sectors: " << rsvdSecCnt << std::endl;
         isBootInvalid = true;
     }
 
-    // Перевіряємо кількість FAT-таблиць
+    // перевіряємо кількість FAT-таблиць
     if (numFATs == 0) {
         std::cerr << "Incorrect number of FAT tables: " << (int)numFATs << std::endl;
         isBootInvalid = true;
@@ -432,21 +412,36 @@ bool isBootFAT32Invalid(extFAT32* bpb){
         isBootInvalid = true;
     }
 
-    // Перевіряємо загальну к-сть секторів
-    if (totSec16 != 0){
-        std::cerr << "Invalid BPB_TotSec16, value here should be 0!" << std::endl;
+    // псеревіряємо загальну к-сть секторів
+    if (totSec16 != 0) {
+        std::cerr << "Invalid BPB_TotSec16, value here should be 0! Found: " << totSec16 << std::endl;
+        if (fixErrors) {
+            std::cout << "Fixing: Setting BPB_TotSec16 to 0.\n";
+            bpb->basic.BPB_TotSec16 = 0; // Виправлення
+        }
         isBootInvalid = true;
     }
-    if (totSec32 == 0){
-        std::cerr << "Number of sectors can't be zero!" << std::endl;
+    if (totSec32 == 0) {
+        std::cerr << "Number of sectors can't be zero! Found: " << totSec32 << std::endl;
+        if (fixErrors) {
+            std::cout << "Fixing: Assigning a default value to BPB_TotSec32.\n";
+            bpb->basic.BPB_TotSec32 = 100000;
+        }
         isBootInvalid = true;
     }
 
+
     // Перевіряємо к-сть секторів для всіх FAT таблиць
-    if (numFATs * fatSize32 >= totSec32 ){
-        std::cerr << "Number of sectors for FAT tables is equal or greater than number of all sectors"<<std::endl;
+    if (numFATs * fatSize32 >= totSec32) {
+        std::cerr << "Number of sectors for FAT tables is equal or greater than number of all sectors. "
+                  << "NumFATs: " << (int)numFATs << ", BPB_FATSz32: " << fatSize32 << ", TotalSectors: " << totSec32 << std::endl;
+        if (fixErrors) {
+            bpb->BPB_FATSz32 = totSec32 / (numFATs + 1);
+            std::cout << "Fixing: Adjusting BPB_FATSz32 to: " << bpb->BPB_FATSz32 << std::endl;
+        }
         isBootInvalid = true;
     }
+
 
     if (rootClusNum <= 1){
         std::cerr << " Invalid number of root cluster: "<< (int)rootClusNum<<std::endl;
@@ -462,14 +457,13 @@ bool isBootFAT32Invalid(extFAT32* bpb){
     // Перевіряємо BS_Reserved1
     if (reserved1 != 0x00) {
         std::cerr << "Invalid reserved field: " << static_cast<int>(reserved1) << std::endl;
-        if (static_cast<int>(reserved1) != 0x00) {
+        if (fixErrors) {
             std::cout << "Fixing reserved field to 0." << std::endl;
-            bpb->BS_Reserved1 = 0x00; // Виправлення (не паше поки)
-            isBootInvalid = false;
+            bpb->BS_Reserved1 = 0x00; // Виправлення
         }
-        // isBootInvalid = false;
-        // isBootInvalid = true;// правильна валідація
+        // isBootInvalid = true;
     }
+
 
     // Перевіряємо BS_BootSig =  0x29 якщо один з наступних = 0x00
     if (bootSig == 0x29 && bpb->BS_VolID == 0x00 && bpb->BS_VolLab[0] == 0x00) {

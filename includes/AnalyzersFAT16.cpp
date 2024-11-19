@@ -1124,7 +1124,7 @@ bool isBootFAT16Invalid(extFAT12_16* bpb,  bool fixErrors){
     // Перевіряємо BS_Reserved1
     if (reserved1 != 0x00) {
         std::cerr << "Invalid reserved field: " << reserved1 << std::endl;
-        isBootInvalid = true;
+        // isBootInvalid = true;
         bootSectorErrors.BPB_BS_ReservedInvalid = true;
     }
 

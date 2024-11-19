@@ -165,7 +165,8 @@ CMakeFiles/FATChecker.dir/main.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
  /usr/include/linux/falloc.h /usr/include/x86_64-linux-gnu/bits/stat.h \
  /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
- /usr/include/x86_64-linux-gnu/bits/fcntl2.h /usr/include/unistd.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl2.h \
+ /home/vbronetskyi/OS/FATChecker/includes/file.hpp /usr/include/unistd.h \
  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \
  /usr/include/x86_64-linux-gnu/bits/confname.h \
@@ -201,8 +202,9 @@ CMakeFiles/FATChecker.dir/main.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
  /home/vbronetskyi/OS/FATChecker/includes/AnalyzersFAT16.hpp \
- /home/vbronetskyi/OS/FATChecker/includes/AnalyzersFAT32.hpp \
+ /home/vbronetskyi/OS/FATChecker/includes/FixFAT16.hpp \
  /home/vbronetskyi/OS/FATChecker/includes/FATstructs.hpp \
+ /home/vbronetskyi/OS/FATChecker/includes/AnalyzersFAT32.hpp \
  /usr/include/c++/13/unordered_set \
  /usr/include/c++/13/bits/unordered_set.h \
  /usr/include/c++/13/bits/hashtable.h \

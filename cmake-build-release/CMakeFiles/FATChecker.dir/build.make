@@ -139,29 +139,77 @@ CMakeFiles/FATChecker.dir/includes/FixFAT16.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FATChecker.dir/includes/FixFAT16.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/vbronetskyi/OS/FATChecker/includes/FixFAT16.cpp -o CMakeFiles/FATChecker.dir/includes/FixFAT16.cpp.s
 
+CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.o: CMakeFiles/FATChecker.dir/flags.make
+CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.o: /home/vbronetskyi/OS/FATChecker/includes/readFunctions.cpp
+CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.o: CMakeFiles/FATChecker.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/vbronetskyi/OS/FATChecker/cmake-build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.o -MF CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.o.d -o CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.o -c /home/vbronetskyi/OS/FATChecker/includes/readFunctions.cpp
+
+CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/vbronetskyi/OS/FATChecker/includes/readFunctions.cpp > CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.i
+
+CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/vbronetskyi/OS/FATChecker/includes/readFunctions.cpp -o CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.s
+
+CMakeFiles/FATChecker.dir/includes/file.cpp.o: CMakeFiles/FATChecker.dir/flags.make
+CMakeFiles/FATChecker.dir/includes/file.cpp.o: /home/vbronetskyi/OS/FATChecker/includes/file.cpp
+CMakeFiles/FATChecker.dir/includes/file.cpp.o: CMakeFiles/FATChecker.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/vbronetskyi/OS/FATChecker/cmake-build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/FATChecker.dir/includes/file.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FATChecker.dir/includes/file.cpp.o -MF CMakeFiles/FATChecker.dir/includes/file.cpp.o.d -o CMakeFiles/FATChecker.dir/includes/file.cpp.o -c /home/vbronetskyi/OS/FATChecker/includes/file.cpp
+
+CMakeFiles/FATChecker.dir/includes/file.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FATChecker.dir/includes/file.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/vbronetskyi/OS/FATChecker/includes/file.cpp > CMakeFiles/FATChecker.dir/includes/file.cpp.i
+
+CMakeFiles/FATChecker.dir/includes/file.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FATChecker.dir/includes/file.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/vbronetskyi/OS/FATChecker/includes/file.cpp -o CMakeFiles/FATChecker.dir/includes/file.cpp.s
+
+CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.o: CMakeFiles/FATChecker.dir/flags.make
+CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.o: /home/vbronetskyi/OS/FATChecker/FAT_fixer/FATFileSystem.cpp
+CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.o: CMakeFiles/FATChecker.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/vbronetskyi/OS/FATChecker/cmake-build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.o -MF CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.o.d -o CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.o -c /home/vbronetskyi/OS/FATChecker/FAT_fixer/FATFileSystem.cpp
+
+CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/vbronetskyi/OS/FATChecker/FAT_fixer/FATFileSystem.cpp > CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.i
+
+CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/vbronetskyi/OS/FATChecker/FAT_fixer/FATFileSystem.cpp -o CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.s
+
 # Object files for target FATChecker
 FATChecker_OBJECTS = \
 "CMakeFiles/FATChecker.dir/main.cpp.o" \
 "CMakeFiles/FATChecker.dir/includes/AnalyzersFAT16.cpp.o" \
 "CMakeFiles/FATChecker.dir/includes/AnalyzersFAT32.cpp.o" \
 "CMakeFiles/FATChecker.dir/includes/AnalyzersFAT12.cpp.o" \
-"CMakeFiles/FATChecker.dir/includes/FixFAT16.cpp.o"
+"CMakeFiles/FATChecker.dir/includes/FixFAT16.cpp.o" \
+"CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.o" \
+"CMakeFiles/FATChecker.dir/includes/file.cpp.o" \
+"CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.o"
 
 # External object files for target FATChecker
 FATChecker_EXTERNAL_OBJECTS =
 
-FATChecker: CMakeFiles/FATChecker.dir/main.cpp.o
-FATChecker: CMakeFiles/FATChecker.dir/includes/AnalyzersFAT16.cpp.o
-FATChecker: CMakeFiles/FATChecker.dir/includes/AnalyzersFAT32.cpp.o
-FATChecker: CMakeFiles/FATChecker.dir/includes/AnalyzersFAT12.cpp.o
-FATChecker: CMakeFiles/FATChecker.dir/includes/FixFAT16.cpp.o
-FATChecker: CMakeFiles/FATChecker.dir/build.make
-FATChecker: CMakeFiles/FATChecker.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/vbronetskyi/OS/FATChecker/cmake-build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX executable FATChecker"
+$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)FATChecker: CMakeFiles/FATChecker.dir/main.cpp.o
+$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)FATChecker: CMakeFiles/FATChecker.dir/includes/AnalyzersFAT16.cpp.o
+$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)FATChecker: CMakeFiles/FATChecker.dir/includes/AnalyzersFAT32.cpp.o
+$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)FATChecker: CMakeFiles/FATChecker.dir/includes/AnalyzersFAT12.cpp.o
+$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)FATChecker: CMakeFiles/FATChecker.dir/includes/FixFAT16.cpp.o
+$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)FATChecker: CMakeFiles/FATChecker.dir/includes/readFunctions.cpp.o
+$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)FATChecker: CMakeFiles/FATChecker.dir/includes/file.cpp.o
+$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)FATChecker: CMakeFiles/FATChecker.dir/FAT_fixer/FATFileSystem.cpp.o
+$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)FATChecker: CMakeFiles/FATChecker.dir/build.make
+$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)FATChecker: CMakeFiles/FATChecker.dir/link.txt
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/vbronetskyi/OS/FATChecker/cmake-build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX executable ======FATChecker"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/FATChecker.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
-CMakeFiles/FATChecker.dir/build: FATChecker
+CMakeFiles/FATChecker.dir/build: $(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)$(EQUALS)FATChecker
 .PHONY : CMakeFiles/FATChecker.dir/build
 
 CMakeFiles/FATChecker.dir/clean:

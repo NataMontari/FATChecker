@@ -20,7 +20,7 @@ bool readDataCluster32(FILE *file, uint16_t bytesPerSec, uint32_t startCluster, 
 bool readFAT32Tables(FILE *file, std::vector<uint32_t*>& FATs, int FATSize, int startSector, int numberOfFATs, uint16_t bytesPerSec);
 
 // Перевірка інваріантів FAT32
-bool isBootFAT32Invalid(extFAT32* bpb);
+bool isBootFAT32Invalid(extFAT32* bpb, bool fixErrors);
 void checkLostClusters(const std::vector<uint32_t>& FAT, uint32_t FATSize, const std::unordered_set<uint32_t>& usedClusters, bool fixErrors);
 
 //аналіз кластерів
@@ -31,5 +31,14 @@ bool AnalyzeDiskData32(FILE *file, uint32_t dataStartCluster, uint16_t bytesPerS
 
 // допоміжні функції
 void printFAT32Table(const uint32_t* FAT, int FATSize, uint16_t bytesPerSec);
-
+struct LFNEntry32 {
+    uint8_t LDIR_Ord;          // Порядок фрагмента
+    uint16_t LDIR_Name1[5];    // Перша частина імені (5 символів)
+    uint8_t LDIR_Attr;         // Атрибут (завжди 0x0F для LFN)
+    uint8_t LDIR_Type;         // Тип (зазвичай 0x00)
+    uint8_t LDIR_Chksum;       // Контрольна сума
+    uint16_t LDIR_Name2[6];    // Друга частина імені (6 символів)
+    uint16_t LDIR_FstClusLO;   // Завжди 0 для LFN
+    uint16_t LDIR_Name3[2];    // Третя частина імені (2 символи)
+};
 #endif //FATCHECKER_ANALYZERSFAT32_HPP
