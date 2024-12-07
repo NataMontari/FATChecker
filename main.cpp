@@ -451,7 +451,6 @@ int main(int argc, char* argv[]) {
             if (!isRootValid){
                 std::cout<<"Found problems in the root directory"<<std::endl;
             }
-            std::cout<<"Found following directory entries"<<std::endl;
             for (const auto& entry: dataDirEntries){
                 for(const auto& letter: entry.DIR_Name){
                     std::cout<<letter;
