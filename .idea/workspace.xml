@@ -30,18 +30,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1468feff-c732-423a-95e1-26b613274a08" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/TargetDirectories.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/TargetDirectories.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/CMakeConfigureLog.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/CMakeConfigureLog.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/cmake_install.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/cmake_install.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/includes/AnalyzersFAT12.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT12.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/includes/AnalyzersFAT16.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT16.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/includes/AnalyzersFAT32.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT32.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/includes/FixFAT16.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/FixFAT16.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/includes/FixFAT32.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/FixFAT32.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/includes/file.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/file.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/includes/readFunctions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/readFunctions.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sources/AnalyzersFAT16.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT16.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -134,6 +126,11 @@
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/main.cpp</url>
           <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/sources/AnalyzersFAT16.cpp</url>
+          <line>936</line>
+          <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

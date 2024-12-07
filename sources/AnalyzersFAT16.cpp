@@ -827,7 +827,6 @@ bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
     FileEntry fileEntry;
     bool isDiskDataValid = true;
     uint32_t entryCluster = 0;
-
 //    std::cout<<dataStartSector<<std::endl;
     for (const auto & entry: dataDirEntries) {
         std::string entryDirName(reinterpret_cast<const char *>(entry.DIR_Name), 11);
@@ -838,7 +837,7 @@ bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
         }
 
         clusterNum = (entry.DIR_FstClusHI << 16) | entry.DIR_FstClusLO - 2;
-        startSectorAddress = dataStartSector + clusterNum;
+        startSectorAddress = dataStartSector + clusterNum*sectorsPerCluster;
 
 
         if (entry.DIR_Attr == 0x08){
