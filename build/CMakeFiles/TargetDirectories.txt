@@ -1,0 +1,3 @@
+/home/vbronetskyi/OS/FATChecker/build/CMakeFiles/FATChecker.dir
+/home/vbronetskyi/OS/FATChecker/build/CMakeFiles/edit_cache.dir
+/home/vbronetskyi/OS/FATChecker/build/CMakeFiles/rebuild_cache.dir

@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include "file.hpp"
 // #include <io.h>// для вінди (наступний закоментуєш а цей навпаки)
-#include <unistd.h> // для лінокса
+#include <unistd.h> // для лінукса
 #include <iomanip> // Для std::hex
 #include <vector>
 #include <algorithm>
@@ -440,7 +440,7 @@ int main(int argc, char* argv[]) {
             }
             // Виводимо вміст root directory
 #ifdef DEBUG_PRNT
-            printRootDirectoryEntries(rootDirEntries);
+            // printRootDirectoryEntries(rootDirEntries);
 #endif
             // Виводимо к-сть root directories, директорій та файлів
             std::vector<FAT16DirEntry> dataDirEntries;
@@ -448,17 +448,17 @@ int main(int argc, char* argv[]) {
             bool isRootValid = AnalyzeRootDir16(rootDirEntries, dataDirEntries, fileEntries, fixErrors);
 
             totalResult = totalResult && isRootValid;
-
-            if (isRootValid){
-                std::cout<<"Found following directory entries"<<std::endl;
-                for (const auto& entry: dataDirEntries){
-                    for(const auto& letter: entry.DIR_Name){
-                        std::cout<<letter;
-                    }
-                    std::cout<<std::endl;
-                }
-                bool isDataValid = AnalyzeDiskData16(fp, bytesPerSec, sectorsPerClus, dataRegionStartSector, dataDirEntries, fileEntries, fixErrors);
+            if (!isRootValid){
+                std::cout<<"Found problems in the root directory"<<std::endl;
             }
+            std::cout<<"Found following directory entries"<<std::endl;
+            for (const auto& entry: dataDirEntries){
+                for(const auto& letter: entry.DIR_Name){
+                    std::cout<<letter;
+                }
+                std::cout<<std::endl;
+            }
+            bool isDataValid = AnalyzeDiskData16(fp, bytesPerSec, sectorsPerClus, dataRegionStartSector, dataDirEntries, fileEntries, fixErrors);
 
 
             analyzeClusterInvariants(FATs[0], FATSize*2, bytesPerSec, sectorsPerClus, fileEntries, fixErrors);
