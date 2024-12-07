@@ -1,5 +1,5 @@
 #include <iostream>
-#include "FATstructs.hpp"
+#include "../includes/FATstructs.hpp"
 #include <algorithm>
 #include <vector>
 #include <cstring>
@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <set>
-#include "FixFAT16.hpp"
+#include "../includes/FixFAT16.hpp"
 
 
 

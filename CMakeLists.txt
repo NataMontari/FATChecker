@@ -7,18 +7,18 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(${PROJECT_NAME} main.cpp
         includes/AnalyzersFAT16.hpp
         includes/FATstructs.hpp
-        includes/AnalyzersFAT16.cpp
+        sources/AnalyzersFAT16.cpp
         includes/AnalyzersFAT32.hpp
-        includes/AnalyzersFAT32.cpp
-        includes/AnalyzersFAT12.cpp
+        sources/AnalyzersFAT32.cpp
+        sources/AnalyzersFAT12.cpp
         includes/AnalyzersFAT12.hpp
         includes/FATTableStructs.hpp
-        includes/FixFAT16.cpp
+        sources/FixFAT16.cpp
         includes/FixFAT16.hpp
-        includes/readFunctions.cpp
+        sources/readFunctions.cpp
         includes/readFunctions.hpp
         includes/file.hpp
-        includes/file.cpp
+        sources/file.cpp
         FAT_fixer/FATFileSystem.cpp
 )
 
