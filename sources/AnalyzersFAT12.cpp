@@ -754,7 +754,7 @@ bool AnalyzeDiskData12(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
         }
 
         clusterNum = ((entry.DIR_FstClusHI & 0x0F) << 8) | entry.DIR_FstClusLO - 2;
-        startSectorAddress = dataStartSector + clusterNum;
+        startSectorAddress = dataStartSector + clusterNum*sectorsPerCluster;
 
 
         if (entry.DIR_Attr == 0x08){

@@ -25,11 +25,12 @@ bool analyzeFAT16Tables(const std::vector<uint16_t*>& FATs, int FATSize, uint16_
 
     bool fixed = false;
     if (FATs.empty()) {
-        std::cout<<"FAT tables weren't found"<<std::endl;
+        std::cout<<"FAT tables weren't found."<<std::endl;
         return false;
     }
 
     size_t numFATs = FATs.size();
+    std::cout<<"System found "<<numFATs<<" copies of FAT tables"<<std::endl;
     for (size_t i = 1; i < numFATs; i++) {
         // Порівняння FAT таблиць
         if (std::memcmp(FATs[0], FATs[i], sizeof(uint16_t) * (FATSize * bytesPerSec / sizeof(uint16_t))) != 0) {
@@ -47,8 +48,6 @@ bool analyzeFAT16Tables(const std::vector<uint16_t*>& FATs, int FATSize, uint16_
     if (!fixed) {
         std::cout << "All FAT tables match." << std::endl;
     }
-
-    std::cout << "All FAT tables match." << std::endl;
     return true; // Усі таблиці співпадають
 }
 
@@ -68,7 +67,10 @@ std::vector<uint16_t> loadFAT16Table(const uint8_t* fatBuffer, int fatSizeBytes)
 std::vector<uint32_t > getClusterChain(uint32_t startCluster, const uint16_t* FAT, int FATSize) {
     std::vector<uint32_t> chain;
     uint32_t cluster = startCluster;
+#ifdef DEBUG_PRNT
     std::cout<<"Start cluster: "<< cluster<<std::endl;
+#endif
+
     while (cluster < 0xFFF8 && cluster > 1 && cluster < FATSize) {
         if (std::find(chain.begin(), chain.end(), cluster) != chain.end()) {
             std::cout << "Cycle detected in cluster chain starting at cluster " << startCluster << ".\n";
@@ -244,7 +246,10 @@ void checkEndOfChain(const uint16_t* FAT, int FATSize, const std::vector<FileEnt
                 }
             }
         } else {
+#ifdef DEBUG_PRNT
             std::cout << "File " << entry.fileName << " ends with a correct EOC marker.\n";
+#endif
+
         }
     }
 }
@@ -299,18 +304,22 @@ void analyzeClusterInvariants(uint16_t* FAT, int FATSize, int bytesPerSec, int s
     // Виявлення дублікатів
     std::cout << "=== Detecting Cluster Duplication ===\n";
     detectClusterDuplication(FAT, FATSize, fileEntries, fixErrors);
+    std::cout << "=== Finished Detecting Cluster Duplication ===\n";
 //
 //    // Перевірка правильності завершення ланцюга кластерів
     std::cout << "\n=== Checking End of Chain Markers ===\n";
     checkEndOfChain(FAT, FATSize, fileEntries, fixErrors);
+    std::cout << "\n=== Finished Checking End of Chain Markers ===\n";
 //
 //    // Перевірка на відповідність розміру файлу
     std::cout << "\n=== Detecting Size Mismatch ===\n";
     detectSizeMismatch(FAT, FATSize, bytesPerSec, secPerCluster, fileEntries, fixErrors);
+    std::cout << "\n=== Finished Detecting Size Mismatch ===\n";
 ////
 ////    // Виявлення загублених кластерів
     std::cout << "\n=== Detecting and Freeing Lost Clusters ===\n";
     detectAndFreeLostClusters(FAT, FATSize, fileEntries, fixErrors);
+    std::cout << "\n=== Finished Detecting and Freeing Lost Clusters ====\n";
 ////
 
     std::cout << "\nAnalysis complete.\n";
@@ -516,7 +525,9 @@ bool AnalyzeRootDir16(std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FA
     std::vector<std::string> longFileNames;
     std::set<std::string> fileNamesSet; // Набір для перевірки дублікатів імен
     FileEntry fileEntry;
+    std::cout<<"---------------------------------------------------------"<<std::endl;
 
+    std::cout<<"Analyzing root directory"<<std::endl;
 
     for(auto &entry: rootDirEntries){
 
@@ -543,7 +554,7 @@ bool AnalyzeRootDir16(std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FA
             if (fixErrors) {
                 uint16_t cluster = (entry.DIR_FstClusHI << 16) | entry.DIR_FstClusLO;
                 if (isClusterValid(cluster, 0xFFF5)) {
-                    std::cout << "Entry points to a valid cluster. Would you like to rename it? (y/n): ";
+                    std::cout << "The entry named '.' points to a valid cluster. Would you like to rename it? (y/n): ";
                     char response;
                     std::cin >> response;
 
@@ -577,7 +588,7 @@ bool AnalyzeRootDir16(std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FA
             if (fixErrors) {
                 uint16_t cluster = (entry.DIR_FstClusHI << 16) | entry.DIR_FstClusLO;
                 if (isClusterValid(cluster, 0xFFF5)) {
-                    std::cout << "Entry points to a valid cluster. Would you like to rename it? (y/n): ";
+                    std::cout << "The entry named '..' points to a valid cluster. Would you like to rename it? (y/n): ";
                     char response;
                     std::cin >> response;
 
@@ -683,7 +694,7 @@ bool AnalyzeRootDir16(std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FA
         } else if(entry.ATTR_VOLUME_ID == 1){
             volumeIDCount++;
             if (entry.DIR_CrtDate != 0){
-                std::cout<<"Error: root entry shouldn't have any associated time stamps"<<std::endl;
+                std::cout<<"Warning! An error found: root entry shouldn't have any associated time stamps"<<std::endl;
                 isRootDirValid = false;
             }
 
@@ -717,43 +728,100 @@ bool AnalyzeRootDir16(std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FA
         fileEntry.entryName = fileName;
         fileEntry.entryCluster = 0;
 
+        printFileInfo(fileEntry, entry);
+
         longFileName.clear();
 
         // Додаємо цей запис до списку файлів
         fileEntries.push_back(fileEntry);
 
     }
-
+    std::cout<<"---------------------------------------------------------"<<std::endl;
+#ifdef DEBUG_PRNT
     std::cout<<"Program found the following files with long names in the root directory:"<<std::endl;
     for (const auto &name: longFileNames){
         std::cout<<"Long file name: "<<name<<std::endl;
     }
+#endif
 //    std::cout << "Long file name: " << longFileName << std::endl;
 
-    std::cout<<"Instances found in the root directory:"<<std::endl;
+    std::cout<<"Summary of instances found in the root directory:"<<std::endl;
     std::cout<<"Volume count: "<<volumeIDCount<<std::endl;
     std::cout<<"File count: "<<fileCount<<std::endl;
     std::cout<<"Directory count: "<<directoryCount<<std::endl;
     if (volumeIDCount == 0){
-        std::cout<<"Missing volume directory entry"<<std::endl;
-        isRootDirValid = false;
+        std::cout<<"Warning! Missing volume directory entry. The disk image may be corrupted or created with a method that doesn't add the volume entry"<<std::endl;
+        // isRootDirValid = false;
     }
     if (volumeIDCount > 1){
-        std::cout<<"Found too many volume directories!"<<std::endl;
+        std::cout<<"Error: Found too many volume directories!"<<std::endl;
         isRootDirValid = false;
     }
 
     if (isRootDirValid){
-        std::cout<<"No errors found in the root directory."<<std::endl;
+        std::cout<<"Finished analyzing the root directory. No errors found in the root directory."<<std::endl;
     }
     bool isfixed;
     if(fixErrors){
         isfixed = fixRootDirErrors();
     }
 
+    std::cout<<"---------------------------------------------------------"<<std::endl;
     return isRootDirValid;
 };
 
+void printFileInfo( FileEntry fileEntry, FAT16DirEntry entry)
+{
+    std::cout<<"---------------------------------------------------------"<<std::endl;
+        std::cout << std::left << std::setw(30) << "File name: "
+          << std::right << std::setw(20) << fileEntry.fileName << std::endl;
+        std::string fileType;
+        if (entry.ATTR_READ_ONLY) fileType += "Read-Only ";
+        if (entry.ATTR_HIDDEN) fileType += "Hidden ";
+        if (entry.ATTR_SYSTEM) fileType += "System ";
+        if (entry.ATTR_VOLUME_ID) fileType += "Volume ID ";
+        if (entry.ATTR_DIRECTORY) fileType += "Directory ";
+        if (entry.ATTR_ARCHIVE) fileType += "File ";
+        if (fileType.empty()) fileType = "Unknown";
+
+        std::cout << std::left << std::setw(30) << "File Type: "
+          << std::right << std::setw(20) << fileType << std::endl;
+
+        std::cout << std::left << std::setw(30) << "File size: "
+          << std::right << std::setw(20) << fileEntry.fileSize << std::endl;
+
+        std::cout << std::left << std::setw(30) << "First Cluster: "
+          << std::right << std::setw(20) << fileEntry.firstCluster << std::endl;
+
+        uint16_t date = entry.DIR_CrtDate;
+        int year = ((date >> 9) & 0x7F) + 1980;  // 15–9 bits
+        int month = (date >> 5) & 0x0F;         // 8–5 bits
+
+        int day = date & 0x1F;                  // 4–0 bits
+        uint16_t time = entry.DIR_CrtTime;
+
+        int hour = (time >> 11) & 0x1F;         // 15–11 bits
+        int minute = (time >> 5) & 0x3F;        // 10–5 bits
+        int second = (time & 0x1F) * 2;         // 4–0 bits (multiply by 2)
+
+        std::ostringstream dateStream, timeStream;
+
+        dateStream << std::setfill('0') << std::setw(2) << day << "-"
+           << std::setw(2) << month << "-"
+           << year;
+
+        timeStream << std::setfill('0') << std::setw(2) << hour << ":"
+           << std::setw(2) << minute << ":"
+           << std::setw(2) << second;
+
+
+        std::cout << std::left << std::setw(30) << "Creation Date: "
+          << std::right << std::setw(20) << dateStream.str() << std::endl;
+
+
+        std::cout << std::left << std::setw(30) << "Creation Time: "
+          << std::right << std::setw(20) << timeStream.str() << std::endl;
+};
 
 
 bool readDataCluster(FILE *file, uint16_t bytesPerSec, uint32_t startSectorAdress, uint8_t secPerClus, std::vector<FAT16DirEntry> & subDirEntries) {
@@ -762,7 +830,9 @@ bool readDataCluster(FILE *file, uint16_t bytesPerSec, uint32_t startSectorAdres
     uint8_t buffer[SECTOR_SIZE * secPerClus]; // Буфер для читання секторів
     uint64_t address = static_cast<uint64_t>(startSectorAdress) * SECTOR_SIZE;
     // Читаємо сектори даних
-    std::cout<<"Physical address of cluster: "<< address<<std::endl;
+#ifdef DEBUG_PRNT
+    std::cout<<"Physical address of cluster: "<< address<<std::endl
+#endif
     if (fseek(file, address, SEEK_SET) < 0) {
         std::cerr << "Failed to seek to data start sector." << std::endl;
         return false;
@@ -817,7 +887,7 @@ bool readDataCluster(FILE *file, uint16_t bytesPerSec, uint32_t startSectorAdres
 }
 
 bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerCluster, uint32_t dataStartSector, const std::vector<FAT16DirEntry>& dataDirEntries, std::vector<FileEntry> &fileEntries, bool fixErrors, bool isRootDir) {
-    std::cout << "The program is verifying files and folders..." << std::endl;
+    // std::cout << "The program is verifying files and folders..." << std::endl;
     uint32_t clusterNum;
     uint32_t startSectorAddress;
     std::vector<std::string> lfnParts;  // Для зберігання частин довгого імені
@@ -897,6 +967,7 @@ bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
             fileEntry.entryName = entryDirName;
             fileEntry.entryCluster = entryCluster;
             fileEntries.push_back(fileEntry); // Додаємо запис у вектор всіх файлів
+            printFileInfo(fileEntry, entry);
         }
 
         entryCluster = clusterNum;
@@ -905,18 +976,21 @@ bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
 
         // Якщо це файл, просто виводимо ім'я
         if (!(entry.DIR_Attr & 0x10)) { // Якщо це не директорія
-            std::cout << "File: " << entryDirName << std::endl;
+            // std::cout << "File: " << entryDirName << std::endl;
             continue; // Не викликаємо рекурсію для файлів
         }
 
         // Якщо це директорія, виводимо ім'я директорії та обробляємо її рекурсивно
+#ifdef DEBUG_PRNT
         std::cout << "Directory: " << entryDirName << " (cluster #" << clusterNum << ")" << std::endl;
+#endif
+        // std::cout << "Directory: " << entryDirName << " contains the following entries:" << std::endl;
         std::vector<FAT16DirEntry> subDirEntries;
-
+#ifdef DEBUG_PRNT
         std::cout << "Start sector address of cluster #" << clusterNum << ": " << startSectorAddress << std::endl;
-
+#endif
         if (clusterNum >= 0xFFF8) { // Якщо кластер знаходиться в діапазоні зарезервованих або пошкоджених.
-            std::cerr << "Error: Found a bad or reserved cluster pointer number: " << clusterNum << std::endl;
+            std::cerr << "Error: Encountered a bad or reserved cluster pointer number: " << clusterNum << std::endl;
             isDiskDataValid = false;
             continue;
         }
@@ -925,10 +999,13 @@ bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
             std::cout << "Failed to read entries from the data region." << std::endl;
         } else {
             // Виводимо результати
+#ifdef DEBUG_PRNT
             std::cout << "Found entries in data region:" << std::endl;
             for (const auto &subEntry: subDirEntries) {
                 std::cout << "  Entry: " << subEntry.DIR_Name << std::endl;
             }
+#endif
+
             bool hasCurrentDir = false;
             bool hasParentDir = false;
 
@@ -957,7 +1034,6 @@ bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
             if (!hasParentDir) {
                 std::cerr << "Warning: Directory does not contain the parent directory entry ('..')." << std::endl;
             }
-
             AnalyzeDiskData16(file, bytesPerSec, sectorsPerCluster, dataStartSector, subDirEntries,  fileEntries, fixErrors, false);
 
         }
@@ -966,11 +1042,14 @@ bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
     if(fixErrors){
         isFixed = fixDataRegionErrors();
     }
+#ifdef DEBUG_PRNT
     std::cout<<"Program found the following files with long names in the root directory:"<<std::endl;
     for (const auto &name: longFileNames){
         std::cout<<"Long file name: "<<name<<std::endl;
     }
     std::cout << "File and folder verification is complete." << std::endl;
+#endif
+
     return isDiskDataValid;
 }
 
@@ -1115,14 +1194,14 @@ bool isBootFAT16Invalid(extFAT12_16* bpb,  bool fixErrors){
 
     // Перевіряємо BS_DrvNum
     if (drvNum != 0x80 && drvNum != 0x00) {
-        std::cerr << "Invalid drive number: " << (int)drvNum << std::endl;
+        std::cerr << "Warning! Invalid drive number: " << (int)drvNum << std::endl;
         isBootInvalid = true;
         bootSectorErrors.BPB_DrvNumInvalid = true;
     }
 
     // Перевіряємо BS_Reserved1
     if (reserved1 != 0x00) {
-        std::cerr << "Invalid reserved field: " << reserved1 << std::endl;
+        std::cerr << "Warning! Invalid reserved field: " << (int)reserved1 << std::endl;
         // isBootInvalid = true;
         bootSectorErrors.BPB_BS_ReservedInvalid = true;
     }

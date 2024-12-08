@@ -14,5 +14,6 @@ void PrintFileEntries(const std::vector<FileEntry>& fileEntries);
 std::vector<uint16_t> loadFAT16Table(const uint8_t* fatBuffer, int fatSizeBytes);
 void handleInvalidBootSector(extFAT12_16* bpb);
 bool isClusterValid(uint16_t cluster, uint16_t maxCluster);
+void printFileInfo( FileEntry fileEntry, FAT16DirEntry entry);
 
 #endif //FATCHECKER_ANALYZERSFAT16_HPP

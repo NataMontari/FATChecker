@@ -16,7 +16,7 @@
 #include "AnalyzersFAT32.hpp"
 #include "AnalyzersFAT12.hpp"
 
-#define DEBUG_PRNT
+// #define DEBUG_PRNT
 
 // Читання кореневої директорії
 bool readRootDirectory(FILE *file, uint16_t bytesPerSec, uint16_t resvdSecCnt, uint8_t numFATs, uint16_t FATSize, uint16_t rootEntCnt, std::vector<FAT16DirEntry>& rootDirEntries) {
@@ -333,7 +333,7 @@ int main(int argc, char* argv[]) {
 #endif
     std::string drLetter = argv[1]; // GET THE RIGHT DEVICE
     std::string device = (drLetter);
-    std::cout<<"Analyzing disk: "<<device<<std::endl;
+    std::cout<<"Analyzing disk/image: "<<device<<std::endl;
 
     // Використання функції для відкриття фізичного диска
     fs_open(device.c_str(), 1); // rw = 1 для читання та запису
@@ -352,7 +352,6 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    std::cout<<"No errors found in boot sector."<<std::endl;
 
 //    std::cout<<"Size of BasicFAT: "<< sizeof(myBasicFAT)<<std::endl;
 #ifdef DEBUG_PRNT
@@ -368,9 +367,9 @@ int main(int argc, char* argv[]) {
     // вектор для зберігання FAT таблиць
 
     bool totalResult = true;
-    std::cout<< "---------------------------------"<<std::endl;
     switch(determineFATType(bpb)){
         case 12: {
+                printBasicFAT(bpb);
             std::cout<<"The type of the file system is FAT12\n"<<std::endl;
             //Перевірка справності boot сектора
             if (isBootFAT12Invalid(bpb, fixErrors)) {
@@ -385,25 +384,29 @@ int main(int argc, char* argv[]) {
             break;
         }
         case 16: {
+                printBasicFAT(bpb);
+                std::cout<<"---------------------------------------------------------"<<std::endl;
 
-            std::cout << "The type of the file system is FAT16\n" << std::endl;
+                std::cout << "The type of the file system is FAT16\n" << std::endl;
             const int FATSize = bpb->basic.BPB_FATSz16; // Розмір FAT таблиці
             std::vector<uint16_t*> FATs; // Вектор для зберігання FAT таблиць
 
             const uint16_t bytesPerSec = bpb->basic.BPB_BytsPerSec;
             const int startFATSector = bpb->basic.BPB_RsvdSecCnt;
             const int numberOfFATs = bpb->basic.BPB_NumFATs; // Кількість FAT таблиць
-
+                std::cout<<"---------------------------------------------------------"<<std::endl;
             //Перевірка справності boot сектора
             if (isBootFAT16Invalid(bpb, fixErrors)) {
                 std::cout << "Boot sector is corrupted. Program was terminated." << std::endl;
                 exit(EXIT_FAILURE);
             }
+                std::cout<<"No errors found in the critical parts of the boot sector. Proceeding with reading the FAT tables."<<std::endl;
 
 
             //Підвантаження FAT таблиць та їх перевірка
             if (!readFAT16Tables(fp, FATs, FATSize, startFATSector, numberOfFATs, bytesPerSec)) {
                 fclose(fp);
+                std::cout<<"Unable to read FAT tables. FAT tables region is corrupted, please check your disk."<<std::endl;
                 exit(EXIT_FAILURE);
             }
 //
@@ -412,6 +415,8 @@ int main(int argc, char* argv[]) {
 //            FATs[1][0] = 10;
 
             // Аналіз FAT таблиць
+                std::cout<<"---------------------------------------------------------"<<std::endl;
+
 
             totalResult = totalResult && analyzeFAT16Tables(FATs, FATSize, bytesPerSec, fixErrors);
 
@@ -449,21 +454,25 @@ int main(int argc, char* argv[]) {
 
             totalResult = totalResult && isRootValid;
             if (!isRootValid){
-                std::cout<<"Found problems in the root directory"<<std::endl;
+                std::cout<<"Warning! Found problems in the root directory."<<std::endl;
             }
+#ifdef DEBUG_PRNT
             for (const auto& entry: dataDirEntries){
                 for(const auto& letter: entry.DIR_Name){
                     std::cout<<letter;
                 }
                 std::cout<<std::endl;
             }
+#endif
+                std::cout<<"Analyzing file and directory region"<<std::endl;
             bool isDataValid = AnalyzeDiskData16(fp, bytesPerSec, sectorsPerClus, dataRegionStartSector, dataDirEntries, fileEntries, fixErrors);
 
-
+                std::cout<<"---------------------------------------------------------"<<std::endl;
             analyzeClusterInvariants(FATs[0], FATSize*2, bytesPerSec, sectorsPerClus, fileEntries, fixErrors);
             for (auto &FAT: FATs){
                 delete[] FAT;
             }
+                std::cout<<"---------------------------------------------------------"<<std::endl;
 //            loadFAT16Table(FATs[0], FATSize);
 
 //            PrintFileEntries(fileEntries);
@@ -471,6 +480,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         case 32: {
+                printBasicFAT(bpb);
             std::cout << "The type of the file system is FAT32\n" << std::endl;
 
             // посилання на структуру FAT32
@@ -544,7 +554,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (totalResult){
-        std::cout<<"The program has scanned the file system and found no problems."<<std::endl;
+        std::cout<<"The program has scanned the file system and found no major problems."<<std::endl;
         std::cout<<"No further action is required."<<std::endl;
         // TO DO add statistic
     }
@@ -552,9 +562,7 @@ int main(int argc, char* argv[]) {
         std::cout<<"The program found the following errors: "<<std::endl;
     }
 
-#ifdef DEBUG_PRNT
-    printBasicFAT(bpb);
-#endif
+
 
 
 
