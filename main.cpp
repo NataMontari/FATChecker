@@ -483,10 +483,13 @@ int main(int argc, char* argv[]) {
         }
         case 32: {
                 printBasicFAT(bpb);
+                extFAT32 *bpb32 = reinterpret_cast<extFAT32 *>(&bpb);
+                std::cout<<"BPB_FATSz32:"<<bpb32->BPB_FATSz32<<std::endl;
+                std::cout<<"---------------------------------------------------------"<<std::endl;
             std::cout << "The type of the file system is FAT32\n" << std::endl;
 
             // посилання на структуру FAT32
-            extFAT32 *bpb32 = reinterpret_cast<extFAT32 *>(&bpb);
+
 
             //перевірка завантажувального сектора
             if (isBootFAT32Invalid(bpb32, fixErrors)) {
@@ -494,7 +497,7 @@ int main(int argc, char* argv[]) {
                 fclose(fp);
                 exit(EXIT_FAILURE);
             }
-
+                std::cout<<"---------------------------------------------------------"<<std::endl;
             const uint16_t bytesPerSec = bpb32->basic.BPB_BytsPerSec;
             const uint8_t secPerClus = bpb32->basic.BPB_SecPerClus;
             const uint16_t rsvdSecCnt = bpb32->basic.BPB_RsvdSecCnt;
@@ -502,6 +505,7 @@ int main(int argc, char* argv[]) {
             const uint32_t fatSize32 = bpb32->BPB_FATSz32;
             const uint32_t rootCluster = bpb32->BPB_RootClus;
             const uint32_t dataStartSector = rsvdSecCnt + (numFATs * fatSize32);
+                int FATSize=  fatSize32*bytesPerSec/sizeof(uint32_t);
 
             std::vector<uint32_t*> FATs;
 
@@ -516,19 +520,29 @@ int main(int argc, char* argv[]) {
                 for (auto FAT : FATs) delete[] FAT;
                 exit(EXIT_FAILURE);
             }
+                std::cout<<"---------------------------------------------------------"<<std::endl;
 
             // аналіз кореневої директорії
-            std::vector<FAT32DirEntry> rootDirEntries;
-            if (!AnalyzeRootDir32(fp, rootCluster, bytesPerSec, secPerClus, FATs[0], fatSize32, rootDirEntries, fixErrors)) {
+
+                std::vector<FAT32DirEntry> rootDirEntries;
+                std::vector<FAT32DirEntry> dataDirEntries;
+                std::vector<FileEntry> fileEntries;
+            if (!AnalyzeRootDir32(fp, rootCluster, dataStartSector, bytesPerSec, secPerClus, FATs[0], fatSize32, rootDirEntries, dataDirEntries, fileEntries, fixErrors)) {
                 std::cerr << "Root directory analysis failed.\n";
                 fclose(fp);
                 for (auto FAT : FATs) delete[] FAT;
                 exit(EXIT_FAILURE);
             }
+                std::cout<<"---------------------------------------------------------"<<std::endl;
+                for(auto dir: dataDirEntries)
+                {
+                    std::cout<<dir.DIR_Name<<std::endl;
 
+                };
+                std::cout << "=== Analyzing Disk Data (Clusters) ===" << std::endl;
             // аналіз даних (кластерів)
-            AnalyzeDiskData32(fp, bytesPerSec, secPerClus, dataStartSector, rootDirEntries, FATs[0], fatSize32, fixErrors);
-
+            AnalyzeDiskData32(fp, bytesPerSec, secPerClus, dataStartSector, dataDirEntries, fileEntries, FATs[0], FATSize, fatSize32, fixErrors);
+                std::cout<<"---------------------------------------------------------"<<std::endl;
             // аналіз використання кластерів
             std::vector<uint32_t> tempFAT(FATs[0], FATs[0] + fatSize32);
             analyzeClusterUsage32(tempFAT, fatSize32, rootDirEntries, fixErrors);

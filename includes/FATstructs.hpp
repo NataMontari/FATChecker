@@ -121,7 +121,18 @@ struct FAT12DirEntry {
 
 struct FAT32DirEntry {
     char DIR_Name[11];      // Ім'я файлу
-    uint8_t DIR_Attr;       // Атрибути
+    union {
+        struct {
+            uint8_t ATTR_READ_ONLY : 1;   // 0x01
+            uint8_t ATTR_HIDDEN : 1;      // 0x02
+            uint8_t ATTR_SYSTEM : 1;      // 0x04
+            uint8_t ATTR_VOLUME_ID : 1;   // 0x08
+            uint8_t ATTR_DIRECTORY : 1;    // 0x10
+            uint8_t ATTR_ARCHIVE : 1;      // 0x20
+            uint8_t ATTR_RESERVED : 2;     // Залишкові біти
+        };
+        uint8_t DIR_Attr; // Повний байт для атрибутів
+    };
     uint8_t DIR_NTRes;      // Зарезервовано для NT
     uint8_t DIR_CrtTimeTenth; // Десяті частки секунди створення
     uint16_t DIR_CrtTime;   // Час створення
