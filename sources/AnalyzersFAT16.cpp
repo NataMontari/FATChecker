@@ -1225,13 +1225,10 @@ bool isBootFAT16Invalid(extFAT12_16& bpb,  bool fixErrors){
     // (Потім) Перевірка Signature_word
 
     // (Потім) Перевірка останнього біта - 0x00 якщо BPB_BytsPerSec > 512
-    std::cout<<"---------------------------------------------------------"<<std::endl;
     if (fixErrors && isBootInvalid) {
         handleInvalidBootSector(bpb);
         isBootInvalid = false;
     }
-    std::cout<<"Bytes per sector"<<bpb.basic.BPB_BytsPerSec<<std::endl;
-
     return isBootInvalid;
 };
 

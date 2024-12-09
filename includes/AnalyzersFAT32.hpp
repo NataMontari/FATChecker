@@ -12,7 +12,6 @@ bool analyzeFAT32Tables(const std::vector<uint32_t*>& FATs, int FATSize, uint16_
 
 // аналіз директорій
 bool AnalyzeRootDir32(FILE *file, uint32_t rootCluster, uint32_t dataStartSector, uint16_t bytesPerSec, uint8_t secPerClus, const uint32_t *FAT, uint32_t FATSize, std::vector<FAT32DirEntry>& rootDirEntries, std::vector<FAT32DirEntry>& dataDirEntries, std::vector<FileEntry>& fileEntries, bool fixErrors);
-void AnalyzeDiskData32(FILE *file, uint16_t bytesPerSec, uint8_t secPerClus, uint32_t dataStartSector, const std::vector<FAT32DirEntry> &dirEntries, std::vector<FileEntry> &fileEntries, uint32_t *FAT, uint32_t FATSize, bool fixErrors);
 
 // завантаження та перевірка даних
 std::vector<uint32_t> loadFAT32Table(const uint8_t* fatBuffer, int fatSizeBytes);

@@ -48,14 +48,16 @@ struct FAT12 {
     // Читання FAT12-ендрі для заданого кластеру
     uint16_t getEntry(int clusterIndex) {
         int byteOffset = clusterIndex * 3 / 2;
-        int bitOffset = (clusterIndex & 1) * 8;
+        int bitOffset = (clusterIndex & 1) * 4;
+
+        // std::cout<<"Cluster index: "<<clusterIndex<<std::endl;
+        if (byteOffset + 1 >= FATSize) { // Перевіряємо межі масиву
+            std::cerr << "Error: Byte offset out of range: " << byteOffset << "\n";
+            return 0xFFF;
+        }
 
         uint16_t entry = FATData[byteOffset] | (FATData[byteOffset + 1] << 8);
-        entry >>= bitOffset;
-
-        if (bitOffset == 8) {
-            entry &= 0x0FFF;  // Маскуємо зайві біти для 12 біт
-        }
+        entry = (entry >> bitOffset) & 0xFFF; // Маскуємо зайві біти для 12-бітного значення
 
         return entry;
     }
