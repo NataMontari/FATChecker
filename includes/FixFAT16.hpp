@@ -21,6 +21,7 @@ struct BootSectorErrors {
     bool BPB_DrvNumInvalid = false;
     bool BPB_BS_ReservedInvalid = false;
     bool BPB_BootSigInvalid = false;
+    bool BPB_BootSignatureWord = false;
 
 };
 

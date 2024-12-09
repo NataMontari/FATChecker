@@ -30,12 +30,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1468feff-c732-423a-95e1-26b613274a08" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fat16_test.img" beforeDir="false" afterPath="$PROJECT_DIR$/fat16_test_corrupted_boot.img" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/includes/AnalyzersFAT16.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/includes/AnalyzersFAT16.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/includes/FATstructs.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/includes/FATstructs.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/includes/FixFAT16.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/includes/FixFAT16.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/includes/readFunctions.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/includes/readFunctions.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sources/AnalyzersFAT12.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT12.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sources/AnalyzersFAT16.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT16.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sources/readFunctions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/readFunctions.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,6 +88,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/data" />
       <recent name="$PROJECT_DIR$/sources" />
     </key>
   </component>
@@ -106,7 +111,9 @@
       <workItem from="1732035153469" duration="4000" />
       <workItem from="1732035274288" duration="1444000" />
       <workItem from="1733585063204" duration="1286000" />
-      <workItem from="1733666160601" duration="3737000" />
+      <workItem from="1733666160601" duration="4091000" />
+      <workItem from="1733681523741" duration="19281000" />
+      <workItem from="1733747821289" duration="1250000" />
     </task>
     <servers />
   </component>
@@ -127,8 +134,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/sources/AnalyzersFAT16.cpp</url>
-          <line>1013</line>
+          <line>1014</line>
           <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/includes/AnalyzersFAT16.hpp</url>
+          <line>9</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/includes/readFunctions.hpp</url>
+          <line>10</line>
+          <option name="timeStamp" value="6" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

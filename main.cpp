@@ -188,28 +188,28 @@ int determineFATType(extFAT12_16 *bpb) {
 }
 
 // Функція для виводу значень структури BasicFAT
-void printBasicFAT(extFAT12_16 *bpb) {
+void printBasicFAT(extFAT12_16 &bpb) {
     std::cout<< "---------------------------------"<<std::endl;
     std::cout << "Boot Sector Information:\n";
     std::cout << "BS_jmpBoot: ";
     for (int i = 0; i < 3; ++i) {
-        std::cout << (int)bpb->basic.BS_jmpBoot[i] << " ";
+        std::cout << (int)bpb.basic.BS_jmpBoot[i] << " ";
     }
-    std::cout << "\nBS_OEMName: " << bpb->basic.BS_OEMName <<"\n";
-    std::cout << "BPB_BytsPerSec: " << bpb->basic.BPB_BytsPerSec <<"\n";
-    std::cout << "BPB_SecPerClus: " << (int)bpb->basic.BPB_SecPerClus <<"\n";
-    std::cout << "BPB_RsvdSecCnt: " << bpb->basic.BPB_RsvdSecCnt<<"\n";
-    std::cout << "BPB_NumFATs: " << (int)bpb->basic.BPB_NumFATs <<"\n";
-    std::cout << "BPB_RootEntCnt: " << bpb->basic.BPB_RootEntCnt <<"\n";
-    std::cout << "BPB_TotSec16: " << bpb->basic.BPB_TotSec16<<"\n";
-    std::cout << "BPB_Media: " << (int)bpb->basic.BPB_Media<< "\n";
-    std::cout << "BPB_FATSz16: " << bpb->basic.BPB_FATSz16<<"\n";
-    std::cout << "BPB_SecPerTrk: " << bpb->basic.BPB_SecPerTrk << "\n";
-    std::cout << "BPB_NumHeads: " << bpb->basic.BPB_NumHeads << "\n";
-    std::cout << "BPB_HiddSec: " << bpb->basic.BPB_HiddSec <<  "\n";
-    std::cout << "BPB_TotSec32: " << bpb->basic.BPB_TotSec32 <<"\n";
+    std::cout << "\nBS_OEMName: " << bpb.basic.BS_OEMName <<"\n";
+    std::cout << "BPB_BytsPerSec: " << bpb.basic.BPB_BytsPerSec <<"\n";
+    std::cout << "BPB_SecPerClus: " << (int)bpb.basic.BPB_SecPerClus <<"\n";
+    std::cout << "BPB_RsvdSecCnt: " << bpb.basic.BPB_RsvdSecCnt<<"\n";
+    std::cout << "BPB_NumFATs: " << (int)bpb.basic.BPB_NumFATs <<"\n";
+    std::cout << "BPB_RootEntCnt: " << bpb.basic.BPB_RootEntCnt <<"\n";
+    std::cout << "BPB_TotSec16: " << bpb.basic.BPB_TotSec16<<"\n";
+    std::cout << "BPB_Media: " << (int)bpb.basic.BPB_Media<< "\n";
+    std::cout << "BPB_FATSz16: " << bpb.basic.BPB_FATSz16<<"\n";
+    std::cout << "BPB_SecPerTrk: " << bpb.basic.BPB_SecPerTrk << "\n";
+    std::cout << "BPB_NumHeads: " << bpb.basic.BPB_NumHeads << "\n";
+    std::cout << "BPB_HiddSec: " << bpb.basic.BPB_HiddSec <<  "\n";
+    std::cout << "BPB_TotSec32: " << bpb.basic.BPB_TotSec32 <<"\n";
 
-    std::string fileSysType(bpb->BS_FilSysType, 3);
+    std::string fileSysType(bpb.BS_FilSysType, 3);
     std::cout << "BS_FilSysType: " << fileSysType <<"\n";
 
 }
@@ -357,7 +357,8 @@ int main(int argc, char* argv[]) {
 #ifdef DEBUG_PRNT
     std::cout<<" Trying to construct a struct"<<std::endl;
 #endif
-    extFAT12_16 *bpb = (extFAT12_16 *)bootSector;
+    extFAT12_16 bpb;
+    memcpy(&bpb, bootSector, sizeof(extFAT12_16));
 
 #ifdef DEBUG_PRNT
     std::cout<<"successfully made a struct, determine fat type\n"<<std::endl;
@@ -367,12 +368,12 @@ int main(int argc, char* argv[]) {
     // вектор для зберігання FAT таблиць
 
     bool totalResult = true;
-    switch(determineFATType(bpb)){
+    switch(determineFATType(&bpb)){
         case 12: {
                 printBasicFAT(bpb);
             std::cout<<"The type of the file system is FAT12\n"<<std::endl;
             //Перевірка справності boot сектора
-            if (isBootFAT12Invalid(bpb, fixErrors)) {
+            if (isBootFAT12Invalid(&bpb, fixErrors)) {
                 std::cout << "Boot sector is corrupted. Program was terminated." << std::endl;
                 exit(EXIT_FAILURE);
             }
@@ -388,18 +389,19 @@ int main(int argc, char* argv[]) {
                 std::cout<<"---------------------------------------------------------"<<std::endl;
 
                 std::cout << "The type of the file system is FAT16\n" << std::endl;
-            const int FATSize = bpb->basic.BPB_FATSz16; // Розмір FAT таблиці
+
             std::vector<uint16_t*> FATs; // Вектор для зберігання FAT таблиць
 
-            const uint16_t bytesPerSec = bpb->basic.BPB_BytsPerSec;
-            const int startFATSector = bpb->basic.BPB_RsvdSecCnt;
-            const int numberOfFATs = bpb->basic.BPB_NumFATs; // Кількість FAT таблиць
                 std::cout<<"---------------------------------------------------------"<<std::endl;
             //Перевірка справності boot сектора
             if (isBootFAT16Invalid(bpb, fixErrors)) {
                 std::cout << "Boot sector is corrupted. Program was terminated." << std::endl;
                 exit(EXIT_FAILURE);
             }
+                const int FATSize = bpb.basic.BPB_FATSz16; // Розмір FAT таблиці
+                const uint16_t bytesPerSec = bpb.basic.BPB_BytsPerSec;
+                const int startFATSector = bpb.basic.BPB_RsvdSecCnt;
+                const int numberOfFATs = bpb.basic.BPB_NumFATs; // Кількість FAT таблиць
                 std::cout<<"No errors found in the critical parts of the boot sector. Proceeding with reading the FAT tables."<<std::endl;
 
 
@@ -418,7 +420,7 @@ int main(int argc, char* argv[]) {
                 std::cout<<"---------------------------------------------------------"<<std::endl;
 
 
-            totalResult = totalResult && analyzeFAT16Tables(FATs, FATSize, bytesPerSec, fixErrors);
+            totalResult = totalResult && analyzeFAT16Tables(FATs, FATSize, bytesPerSec, startFATSector, fixErrors);
 
 #ifdef DEBUG_PRNT
             printFATTable(FATs[0], FATSize, bytesPerSec);
@@ -431,9 +433,9 @@ int main(int argc, char* argv[]) {
 //            AnalyzeMainFAT16(bpb);
 //            AnalyzeCopyFAT16();
             std::vector<FAT16DirEntry> rootDirEntries;
-            int rootEntCnt = bpb->basic.BPB_RootEntCnt;
-            int resvdSecCnt = bpb -> basic.BPB_RsvdSecCnt;
-            int sectorsPerClus = bpb -> basic.BPB_SecPerClus;
+            int rootEntCnt = bpb.basic.BPB_RootEntCnt;
+            int resvdSecCnt = bpb.basic.BPB_RsvdSecCnt;
+            int sectorsPerClus = bpb.basic.BPB_SecPerClus;
             int rootStartSector = resvdSecCnt + numberOfFATs*FATSize;
             int dataRegionStartSector = rootStartSector + rootEntCnt*32/bytesPerSec;
 
@@ -484,7 +486,7 @@ int main(int argc, char* argv[]) {
             std::cout << "The type of the file system is FAT32\n" << std::endl;
 
             // посилання на структуру FAT32
-            extFAT32 *bpb32 = reinterpret_cast<extFAT32 *>(bpb);
+            extFAT32 *bpb32 = reinterpret_cast<extFAT32 *>(&bpb);
 
             //перевірка завантажувального сектора
             if (isBootFAT32Invalid(bpb32, fixErrors)) {

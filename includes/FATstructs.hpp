@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
 
 #pragma pack(push, 1)  // Забезпечує відсутність вирівнювання полів у структурі
 
@@ -33,6 +34,8 @@ typedef struct {
     uint32_t BS_VolID;              // Серійний номер тому
     char BS_VolLab[11];             // Мітка тому
     char BS_FilSysType[8];          // Тип файлової системи ("FAT12   " або "FAT16   ")
+    uint8_t BS_BootCode[448];       // Завантажувальний код
+    uint16_t BS_BootSectorSig;      // Підпис бут-сектора (0xAA55)
 } extFAT12_16;
 
 typedef struct {
