@@ -15,6 +15,7 @@
 #include "AnalyzersFAT16.hpp"
 #include "AnalyzersFAT32.hpp"
 #include "AnalyzersFAT12.hpp"
+#include <set>
 
 // #define DEBUG_PRNT
 
@@ -465,7 +466,7 @@ int main(int argc, char* argv[]) {
                 exit(EXIT_FAILURE);
             }
 
-            totalResult = totalResult && analyzeFAT12Tables(FATs, FATSize, bytesPerSec, fixErrors);
+            totalResult = totalResult && analyzeFAT12Tables(FATs, FATSize, bytesPerSec, startFATSector, fixErrors);
 // #ifdef DEBUG_PRNT
 //             printFAT12Table(FATs[0], FATSize, bytesPerSec);
 // #endif
@@ -602,7 +603,8 @@ int main(int argc, char* argv[]) {
             }
 #endif
                 std::cout<<"Analyzing file and directory region"<<std::endl;
-            bool isDataValid = AnalyzeDiskData16(fp, bytesPerSec, sectorsPerClus, dataRegionStartSector, dataDirEntries, fileEntries, fixErrors);
+                std::set<uint32_t> processedClusters;
+            bool isDataValid = AnalyzeDiskData16(fp, bytesPerSec, sectorsPerClus, dataRegionStartSector, dataDirEntries, fileEntries, processedClusters, fixErrors);
 
                 std::cout<<"---------------------------------------------------------"<<std::endl;
             analyzeClusterInvariants(FATs[0], FATSize*2, bytesPerSec, sectorsPerClus, fileEntries, fixErrors);
@@ -621,8 +623,9 @@ int main(int argc, char* argv[]) {
                 std::cout << "The type of the file system is FAT32\n" << std::endl;
                 std::cout<<"---------------------------------------------------------"<<std::endl;
                 printBasicFAT(bpb);
-                extFAT32 *bpb32 = reinterpret_cast<extFAT32 *>(&bpb);
-                std::cout<<"BPB_FATSz32:"<<bpb32->BPB_FATSz32<<std::endl;
+                extFAT32 bpb32;
+                memcpy(&bpb32, &bpb, sizeof(extFAT12_16));
+                std::cout<<"BPB_FATSz32:"<<bpb32.BPB_FATSz32<<std::endl;
                 std::cout<<"---------------------------------------------------------"<<std::endl;
 
 
@@ -636,12 +639,12 @@ int main(int argc, char* argv[]) {
                 exit(EXIT_FAILURE);
             }
                 std::cout<<"---------------------------------------------------------"<<std::endl;
-            const uint16_t bytesPerSec = bpb32->basic.BPB_BytsPerSec;
-            const uint8_t secPerClus = bpb32->basic.BPB_SecPerClus;
-            const uint16_t rsvdSecCnt = bpb32->basic.BPB_RsvdSecCnt;
-            const uint8_t numFATs = bpb32->basic.BPB_NumFATs;
-            const uint32_t fatSize32 = bpb32->BPB_FATSz32;
-            const uint32_t rootCluster = bpb32->BPB_RootClus;
+            const uint16_t bytesPerSec = bpb32.basic.BPB_BytsPerSec;
+            const uint8_t secPerClus = bpb32.basic.BPB_SecPerClus;
+            const uint16_t rsvdSecCnt = bpb32.basic.BPB_RsvdSecCnt;
+            const uint8_t numFATs = bpb32.basic.BPB_NumFATs;
+            const uint32_t fatSize32 = bpb32.BPB_FATSz32;
+            const uint32_t rootCluster = bpb32.BPB_RootClus;
             const uint32_t dataStartSector = rsvdSecCnt + (numFATs * fatSize32);
                 int FATSize=  fatSize32*bytesPerSec/sizeof(uint32_t);
 
@@ -652,7 +655,7 @@ int main(int argc, char* argv[]) {
                 fclose(fp);
                 exit(EXIT_FAILURE);
             }
-            if (!analyzeFAT32Tables(FATs, fatSize32, bytesPerSec, fixErrors)) {
+            if (!analyzeFAT32Tables(FATs, fatSize32, bytesPerSec, rsvdSecCnt, fixErrors)) {
                 std::cerr << "FAT32 table analysis failed.\n";
                 fclose(fp);
                 for (auto FAT : FATs) delete[] FAT;

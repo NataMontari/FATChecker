@@ -73,12 +73,15 @@ std::vector<uint32_t > getClusterChain(uint32_t startCluster, const uint16_t* FA
 #endif
 
     while (cluster < 0xFFF8 && cluster > 1 && cluster < FATSize) {
+        std::cout<<"Current Cluster: "<<cluster<<std::endl;
         if (std::find(chain.begin(), chain.end(), cluster) != chain.end()) {
             std::cout << "Cycle detected in cluster chain starting at cluster " << startCluster << ".\n";
             break;  // Виявлено зациклення
         }
+
         chain.push_back(cluster);
         cluster = FAT[cluster];
+        std::cout<<"Next cluster: "<<cluster<<std::endl;
 
     }
     return chain;
@@ -107,6 +110,7 @@ std::vector<uint32_t > getClusterChain(uint32_t startCluster, const uint16_t* FA
 
 void populateClusterChains(const uint16_t* FAT, int FATSize, std::vector<FileEntry>& fileEntries) {
     for (auto& entry : fileEntries) {
+        std::cout<<"entry: "<<entry.fileName<<std::endl;
         entry.clusterChain = getClusterChain(entry.firstCluster, FAT, FATSize);
     }
 }
@@ -524,7 +528,8 @@ bool AnalyzeRootDir16(std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FA
     std::vector<std::string> lfnParts;  // Для зберігання частин довгого імені
     std::string longFileName;
     std::vector<std::string> longFileNames;
-    std::set<std::string> fileNamesSet; // Набір для перевірки дублікатів імен
+    std::set<std::pair<std::string, uint32_t>> fileNamesAndClusterSet; // Набір для перевірки дублікатів імен
+    std::set<std::string>fileNamesSet;
     FileEntry fileEntry;
     std::cout<<"---------------------------------------------------------"<<std::endl;
 
@@ -628,6 +633,7 @@ bool AnalyzeRootDir16(std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FA
         // Якщо це основний запис файлу або директорії, обробляємо його
         if (!lfnParts.empty()) {
             // Склеїмо всі частини імені у правильному порядку
+            int lfnParts_size = lfnParts.size();
             for (auto it = lfnParts.rbegin(); it != lfnParts.rend(); ++it) {
                 longFileName += *it;
             }
@@ -637,12 +643,34 @@ bool AnalyzeRootDir16(std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FA
             if (!isValidName(longFileName, 1)) {
                 std::cout << "Error: Invalid long file name: " << longFileName << std::endl;
                 isRootDirValid = false;
+
+                if(fixErrors)
+                {
+                    std::cout << "Would you like to fix the filename? (y/n): ";
+                    char choice;
+                    std::cin >> choice;
+                    if (choice == 'y' || choice == 'Y') {
+                        // Введення нового імені
+                        std::string newFileName;
+                        std::cout << "Enter new file name: ";
+                        std::cin >> newFileName;
+
+                        if (newFileName.length() > 11) {
+                            newFileName = newFileName.substr(0, 11); // Обрізаємо до 11 символів
+                            std::cout << "Name truncated to 11 characters: " << newFileName << std::endl;
+                        }
+
+                        memset(entry.DIR_Name, ' ', 11); // Заповнюємо пробілами
+                        memcpy(entry.DIR_Name, newFileName.c_str(), newFileName.length());
+                    }
+                }
             }
 
             // Перевірка на дублікати імен файлів
             if (fileNamesSet.find(longFileName) != fileNamesSet.end()) {
                 std::cout << "Error: Duplicate name found: " << longFileName << std::endl;
                 isRootDirValid = false;
+
             } else {
                 fileNamesSet.insert(longFileName);
             }
@@ -887,7 +915,7 @@ bool readDataCluster(FILE *file, uint16_t bytesPerSec, uint32_t startSectorAdres
     return true;
 }
 
-bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerCluster, uint32_t dataStartSector, const std::vector<FAT16DirEntry>& dataDirEntries, std::vector<FileEntry> &fileEntries, bool fixErrors, bool isRootDir) {
+bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerCluster, uint32_t dataStartSector, const std::vector<FAT16DirEntry>& dataDirEntries, std::vector<FileEntry> &fileEntries, std::set<uint32_t>& processedClusters, bool fixErrors, bool isRootDir) {
     // std::cout << "The program is verifying files and folders..." << std::endl;
     uint32_t clusterNum;
     uint32_t startSectorAddress;
@@ -980,7 +1008,10 @@ bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
             // std::cout << "File: " << entryDirName << std::endl;
             continue; // Не викликаємо рекурсію для файлів
         }
-
+        if (processedClusters.find(clusterNum) != processedClusters.end()) {
+            continue;
+        }
+        processedClusters.insert(clusterNum);
         // Якщо це директорія, виводимо ім'я директорії та обробляємо її рекурсивно
 #ifdef DEBUG_PRNT
         std::cout << "Directory: " << entryDirName << " (cluster #" << clusterNum << ")" << std::endl;
@@ -1035,7 +1066,7 @@ bool AnalyzeDiskData16(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
             if (!hasParentDir) {
                 std::cerr << "Warning: Directory does not contain the parent directory entry ('..')." << std::endl;
             }
-            AnalyzeDiskData16(file, bytesPerSec, sectorsPerCluster, dataStartSector, subDirEntries,  fileEntries, fixErrors, false);
+            AnalyzeDiskData16(file, bytesPerSec, sectorsPerCluster, dataStartSector, subDirEntries,  fileEntries, processedClusters,fixErrors, false);
 
         }
     }
@@ -1285,12 +1316,12 @@ bool restoreFromBackup(extFAT12_16& bpb) {
         return false;
     }
     std::cout << "Successfully wrote boot sector" << std::endl;
-    std::cout << "Boot Sector Hex Dump:" << std::endl;
-    for (int i = 0; i < bootSectorSize; i++) {
-        std::cout << std::hex << (int)backupBootSector[i] << " ";
-        if ((i + 1) % 16 == 0) std::cout << std::endl; // Hex dump every 16 bytes
-    }
-    std::cout << std::dec;
+    // std::cout << "Boot Sector Hex Dump:" << std::endl;
+    // for (int i = 0; i < bootSectorSize; i++) {
+    //     std::cout << std::hex << (int)backupBootSector[i] << " ";
+    //     if ((i + 1) % 16 == 0) std::cout << std::endl; // Hex dump every 16 bytes
+    // }
+    // std::cout << std::dec;
 
     // Копіюємо дані з резервного сектора в структуру BPB
     memcpy(&bpb, backupBootSector, bootSectorSize);

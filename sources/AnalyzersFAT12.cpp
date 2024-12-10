@@ -199,7 +199,7 @@ void analyzeClusterInvariants12(uint8_t* &FAT, int FATSize, int bytesPerSec, int
     std::cout << "\nAnalysis complete.\n";
 }
 
-bool analyzeFAT12Tables(const std::vector<uint8_t*>& FATs, int FATSize, uint16_t bytesPerSec, bool fixErrors) {
+bool analyzeFAT12Tables(const std::vector<uint8_t*>& FATs, int FATSize, uint16_t bytesPerSec, int startFATSector, bool fixErrors) {
 #ifdef DEBUG_PRNT
     std::cout << "---------------------------------" << std::endl;
     std::cout << "Trying to analyze FAT12 tables" << std::endl;
@@ -220,6 +220,7 @@ bool analyzeFAT12Tables(const std::vector<uint8_t*>& FATs, int FATSize, uint16_t
             if (fixErrors) {
                 // Виправлення таблиці FAT12, копіюючи дані з першої таблиці
                 std::memcpy(FATs[i], FATs[0], FATSize * bytesPerSec);
+                writeFATTableToFile12(FATs[0], i, bytesPerSec, FATSize, startFATSector);
                 std::cout << "FAT12 table " << i + 1 << " has been fixed by copying from FAT12 table 1." << std::endl;
                 fixed = true;
             } else {

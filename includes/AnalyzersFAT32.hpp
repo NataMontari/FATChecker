@@ -6,9 +6,9 @@
 #include <unordered_set>
 
 // аналіз FAT таблиць
-void AnalyzeMainFAT32(const uint8_t* fatBuffer, const std::vector<uint8_t*>& fatCopies, int fatSize, uint16_t bytesPerSec, bool fixErrors);
+
 void AnalyzeCopyFAT32();
-bool analyzeFAT32Tables(const std::vector<uint32_t*>& FATs, int FATSize, uint16_t bytesPerSec, bool fixErrors);
+bool analyzeFAT32Tables(const std::vector<uint32_t*>& FATs, int FATSize, uint16_t bytesPerSec, int startFATSector, bool fixErrors);
 
 // аналіз директорій
 bool AnalyzeRootDir32(FILE *file, uint32_t rootCluster, uint32_t dataStartSector, uint16_t bytesPerSec, uint8_t secPerClus, const uint32_t *FAT, uint32_t FATSize, std::vector<FAT32DirEntry>& rootDirEntries, std::vector<FAT32DirEntry>& dataDirEntries, std::vector<FileEntry>& fileEntries, bool fixErrors);
@@ -29,7 +29,7 @@ void printFileInfo32( FileEntry fileEntry, FAT32DirEntry entry);
 
 
 // Перевірка інваріантів FAT32
-bool isBootFAT32Invalid(extFAT32* bpb, bool fixErrors);
+bool isBootFAT32Invalid(extFAT32& bpb, bool fixErrors);
 void checkLostClusters(const std::vector<uint32_t>& FAT, uint32_t FATSize, const std::unordered_set<uint32_t>& usedClusters, bool fixErrors);
 
 //аналіз кластерів
@@ -37,6 +37,9 @@ void analyzeClusterUsage32(std::vector<uint32_t>& FAT, uint32_t FATSize, const s
 
 // аналіз даних
 void AnalyzeDiskData32(FILE *file, uint16_t bytesPerSec, uint8_t secPerClus, uint32_t dataStartSector, const std::vector<FAT32DirEntry> &dirEntries, std::vector<FileEntry> &fileEntries, uint32_t *FAT, uint32_t FATSize, bool fixErrors, bool isRootDir = true);
+void handleInvalidBootSector32(extFAT32& bpb) ;
+bool attemptRestoreFromBackup32(extFAT32& bpb);
+bool restoreFromBackup32(extFAT32& bpb);
 
 // допоміжні функції
 void printFAT32Table(const uint32_t* FAT, int FATSize, uint16_t bytesPerSec);

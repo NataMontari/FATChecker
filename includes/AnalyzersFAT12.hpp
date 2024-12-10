@@ -10,7 +10,7 @@ bool AnalyzeRootDir12(std::vector<FAT12DirEntry>& rootDirEntries, std::vector<FA
 void AnalyzeDiskData12();
 bool fixRootDirErrors12();
 bool isBootFAT12Invalid(extFAT12_16* bpb, bool fixErrors);
-bool analyzeFAT12Tables(const std::vector<uint8_t*>& FATs, int FATSize, uint16_t bytesPerSec, bool fixErrors);
+bool analyzeFAT12Tables(const std::vector<uint8_t*>& FATs, int FATSize, uint16_t bytesPerSec, int startFATSector, bool fixErrors);
 void writeFAT12Entry(uint8_t* FAT, int entryIndex, uint16_t value);
 uint16_t readFAT12Entry(uint8_t* FAT, int entryIndex);
 void handleInvalidBootSector12(extFAT12_16* bpb);

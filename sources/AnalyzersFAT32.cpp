@@ -10,9 +10,10 @@
 #include <iomanip>
 #include "FixFAT32.hpp"
 #include "AnalyzersFAT32.hpp"
+#include "readFunctions.hpp"
 
 // аналіз FAT таблиць і порівняння копій
-bool analyzeFAT32Tables(const std::vector<uint32_t*>& FATs, int FATSize, uint16_t bytesPerSec, bool fixErrors) {
+bool analyzeFAT32Tables(const std::vector<uint32_t*>& FATs, int FATSize, uint16_t bytesPerSec, int startFATSector, bool fixErrors) {
     std::cout<<"---------------------------------------------------------"<<std::endl;
     std::cout << "=== Analyzing FAT32 Tables ===\n";
     if (FATs.empty()) {
@@ -29,6 +30,7 @@ bool analyzeFAT32Tables(const std::vector<uint32_t*>& FATs, int FATSize, uint16_
             std::cerr << "FAT table " << i + 1 << " differs from FAT table 1.\n";
             if (fixErrors) {
                 std::memcpy(FATs[i], FATs[0], sizeof(uint32_t) * (FATSize * bytesPerSec / sizeof(uint32_t)));
+                writeFATTableToFile32(FATs[0], i, bytesPerSec, FATSize, startFATSector);
                 std::cout << "FAT table " << i + 1 << " fixed by copying from FAT table 1.\n";
                 fixed = true;
             } else {
@@ -110,26 +112,7 @@ void printFileInfo32( FileEntry fileEntry, FAT32DirEntry entry)
           << std::right << std::setw(20) << timeStream.str() << std::endl;
 };
 
-void AnalyzeMainFAT32(const uint8_t* fatBuffer, const std::vector<uint8_t*>& fatCopies, int fatSize, uint16_t bytesPerSec, bool fixErrors) {
-    std::cout << "Analyzing Main FAT32 Table...\n";
 
-    std::vector<uint32_t> mainFAT = loadFAT32Table(fatBuffer, fatSize * bytesPerSec);
-
-    // завантаження копій FAT таблиць
-    std::vector<uint32_t*> FATs;
-    FATs.push_back(mainFAT.data());
-    for (auto* copy : fatCopies) {
-        std::vector<uint32_t> fatCopy = loadFAT32Table(copy, fatSize * bytesPerSec);
-        FATs.push_back(fatCopy.data());
-    }
-
-    bool result = analyzeFAT32Tables(FATs, fatSize, bytesPerSec, fixErrors);
-    if (result) {
-        std::cout << "FAT32 table analysis complete: No inconsistencies found.\n";
-    } else {
-        std::cerr << "FAT32 table analysis complete: Errors detected.\n";
-    }
-}
 
 void AnalyzeCopyFAT32(){
     std::cout<<"Analyzing Copy FAT Table"<<std::endl;
@@ -879,28 +862,28 @@ bool isValid(T value, const T (&validArray)[N]) {
     return std::any_of(std::begin(validArray), std::end(validArray), [value](T v) { return v == value; });
 }
 
-bool isBootFAT32Invalid(extFAT32* bpb,  bool fixErrors){
+bool isBootFAT32Invalid(extFAT32& bpb,  bool fixErrors){
     // функція перевіряє всі інваріанти бут сектора і повертає false якщо інформацію записано невірно і true якщо все добре
     bool isBootInvalid = false;
 
     BootSectorErrorsFAT32 bootSectorErrors;
 
-    uint16_t bytsPerSec = bpb->basic.BPB_BytsPerSec;
-    uint8_t secPerClus = bpb->basic.BPB_SecPerClus;
-    uint8_t numFATs = bpb->basic.BPB_NumFATs;
-    uint16_t rootEntCnt = bpb->basic.BPB_RootEntCnt;
-    uint16_t rsvdSecCnt = bpb->basic.BPB_RsvdSecCnt;
-    uint16_t totSec16 = bpb->basic.BPB_TotSec16;
-    uint32_t totSec32 = bpb->basic.BPB_TotSec32;
-    uint8_t media = bpb->basic.BPB_Media;
-    uint16_t fatSize16 = bpb->basic.BPB_FATSz16;
-    uint16_t fatSize32 = bpb->BPB_FATSz32;
-    uint16_t secPerTrk = bpb->basic.BPB_SecPerTrk;
-    uint16_t numHeads = bpb->basic.BPB_NumHeads;
-    uint8_t drvNum = bpb->BS_DrvNum;
-    uint8_t reserved1 = bpb->BS_Reserved1;
-    uint8_t bootSig = bpb->BS_BootSig;
-    uint32_t rootClusNum = bpb->BPB_RootClus;
+    uint16_t bytsPerSec = bpb.basic.BPB_BytsPerSec;
+    uint8_t secPerClus = bpb.basic.BPB_SecPerClus;
+    uint8_t numFATs = bpb.basic.BPB_NumFATs;
+    uint16_t rootEntCnt = bpb.basic.BPB_RootEntCnt;
+    uint16_t rsvdSecCnt = bpb.basic.BPB_RsvdSecCnt;
+    uint16_t totSec16 = bpb.basic.BPB_TotSec16;
+    uint32_t totSec32 = bpb.basic.BPB_TotSec32;
+    uint8_t media = bpb.basic.BPB_Media;
+    uint16_t fatSize16 = bpb.basic.BPB_FATSz16;
+    uint16_t fatSize32 = bpb.BPB_FATSz32;
+    uint16_t secPerTrk = bpb.basic.BPB_SecPerTrk;
+    uint16_t numHeads = bpb.basic.BPB_NumHeads;
+    uint8_t drvNum = bpb.BS_DrvNum;
+    uint8_t reserved1 = bpb.BS_Reserved1;
+    uint8_t bootSig = bpb.BS_BootSig;
+    uint32_t rootClusNum = bpb.BPB_RootClus;
 
 
     // Далі використовуємо ці змінні для перевірок
@@ -911,7 +894,7 @@ bool isBootFAT32Invalid(extFAT32* bpb,  bool fixErrors){
 
 
     // Перевірка BS_jmpBoot
-    if (!(bpb->basic.BS_jmpBoot[0] == 0xEB && bpb->basic.BS_jmpBoot[2] == 0x90) && bpb->basic.BS_jmpBoot[0] != 0xE9){
+    if (!(bpb.basic.BS_jmpBoot[0] == 0xEB && bpb.basic.BS_jmpBoot[2] == 0x90) && bpb.basic.BS_jmpBoot[0] != 0xE9){
         std::cerr << "Incorrect jump boot address"<<std::endl;
         isBootInvalid = true;
     }
@@ -987,7 +970,7 @@ bool isBootFAT32Invalid(extFAT32* bpb,  bool fixErrors){
         std::cerr<<"If value stored in TotSec16 isn't 0 will proceed with the number of sectors stored in that variable."<<std::endl;
         if(totSec16 != 0)
         {
-            bpb->basic.BPB_TotSec32 = totSec16;
+            bpb.basic.BPB_TotSec32 = totSec16;
             totSec32 = totSec16;
         }
         else
@@ -1008,8 +991,8 @@ bool isBootFAT32Invalid(extFAT32* bpb,  bool fixErrors){
         std::cerr << "Number of sectors for FAT tables is equal or greater than number of all sectors. "
                   << "NumFATs: " << (int)numFATs << ", BPB_FATSz32: " << fatSize32 << ", TotalSectors: " << totSec32 << std::endl;
         if (fixErrors) {
-            bpb->BPB_FATSz32 = totSec32 / (numFATs + 1);
-            std::cout << "Fixing: Adjusting BPB_FATSz32 to: " << bpb->BPB_FATSz32 << std::endl;
+            bpb.BPB_FATSz32 = totSec32 / (numFATs + 1);
+            std::cout << "Fixing: Adjusting BPB_FATSz32 to: " << bpb.BPB_FATSz32 << std::endl;
         }
         isBootInvalid = true;
     }
@@ -1031,25 +1014,28 @@ bool isBootFAT32Invalid(extFAT32* bpb,  bool fixErrors){
         std::cerr << "Warning! Invalid reserved field: " << static_cast<int>(reserved1) << std::endl;
         if (fixErrors) {
             std::cout << "Fixing reserved field to 0." << std::endl;
-            bpb->BS_Reserved1 = 0x00; // Виправлення
+            bpb.BS_Reserved1 = 0x00; // Виправлення
         }
         // isBootInvalid = true;
     }
 
 
     // Перевіряємо BS_BootSig =  0x29 якщо один з наступних = 0x00
-    if (bootSig == 0x29 && bpb->BS_VolID == 0x00 && bpb->BS_VolLab[0] == 0x00) {
+    if (bootSig == 0x29 && bpb.BS_VolID == 0x00 && bpb.BS_VolLab[0] == 0x00) {
         std::cerr << "Invalid boot signature: " << (int)bootSig << std::endl;
         isBootInvalid = true;
     }
 
-    if(bpb->BS_BootSectorSig != 0xAA55)
+    if(bpb.BS_BootSectorSig != 0xAA55)
     {
-        std::cerr <<"Invalid signature word for FAT: "<< bpb->BS_BootSectorSig<<std::endl;
+        std::cerr <<"Invalid signature word for FAT: "<< bpb.BS_BootSectorSig<<std::endl;
         isBootInvalid = true;
         bootSectorErrors.BPB_BootSignatureWord = true;
     }
-
+    if (fixErrors && isBootInvalid) {
+        handleInvalidBootSector32(bpb);
+        isBootInvalid = false;
+    }
     // (Потім) Перевірка Signature_word
 
     // (Потім) Перевірка останнього біта - 0x00 якщо BPB_BytsPerSec > 512
@@ -1073,5 +1059,73 @@ bool readFAT32Tables(FILE *file, std::vector<uint32_t*>& FATs, int FATSize, int 
     }
 
     std::cout << "Successfully read FAT32 tables." << std::endl;
+    return true;
+}
+
+void handleInvalidBootSector32(extFAT32& bpb) {
+    std::cout << "The boot sector is invalid." << std::endl;
+
+    while (true) {
+        std::cout << "Do you want to attempt restoration from backup? (yes/no): ";
+        std::string choice;
+        std::cin >> choice;
+
+        if (choice == "yes" || choice == "y") {
+            std::cout<<"---------------------------------------------------------"<<std::endl;
+            std::cout << "Attempting to restore from backup..." << std::endl;
+
+            // Спроба відновлення з резервної копії
+            if (attemptRestoreFromBackup32(bpb)) {
+                std::cout << "Backup restored successfully and is valid. Continuing execution..." << std::endl;
+                if(!writeBootSectorToFile32(&bpb))
+                {
+                    std::cout<<"Failed to copy backup boot sector to the boot sector. Disk may be corrupted in the boot sector region. Will proceed with backup boot sector info."<<std::endl;
+                }
+                break; // Успішне відновлення, продовжити роботу
+            } else {
+                std::cerr << "Failed to restore from backup or restored boot sector is invalid." << std::endl;
+                exit(EXIT_FAILURE); // Завершити програму
+            }
+        } else if (choice == "no" || choice == "n") {
+            std::cout<<"---------------------------------------------------------"<<std::endl;
+            std::cerr << "Cannot proceed without a valid boot sector. Exiting program." << std::endl;
+            exit(EXIT_FAILURE); // Завершити програму
+        } else {
+            std::cerr << "Invalid choice. Please enter 'yes' or 'no'." << std::endl;
+        }
+    }
+}
+
+bool attemptRestoreFromBackup32(extFAT32& bpb) {
+    if (!restoreFromBackup32(bpb)) {
+        return false;
+    }
+    return !(isBootFAT32Invalid(bpb, false)); // Викликаємо перевірку валідності
+}
+
+bool restoreFromBackup32(extFAT32& bpb) {
+    constexpr int bootSectorSize = sizeof(extFAT12_16);
+    uint8_t backupBootSector[bootSectorSize];
+
+    std::cout << "Attempting to restore boot sector from backup..." << std::endl;
+
+    // Використовуємо readBackupBootSector для зчитування резервної копії
+    if (!readBackupBootSector32(backupBootSector, bootSectorSize)) {
+        std::cerr << "Failed to read backup boot sector." << std::endl;
+        return false;
+    }
+    std::cout << "Successfully wrote boot sector" << std::endl;
+    // std::cout << "Boot Sector Hex Dump:" << std::endl;
+    // for (int i = 0; i < bootSectorSize; i++) {
+    //     std::cout << std::hex << (int)backupBootSector[i] << " ";
+    //     if ((i + 1) % 16 == 0) std::cout << std::endl; // Hex dump every 16 bytes
+    // }
+    // std::cout << std::dec;
+
+    // Копіюємо дані з резервного сектора в структуру BPB
+    memcpy(&bpb, backupBootSector, bootSectorSize);
+
+    std::cout << "Boot sector successfully restored from backup. Checking if backup boot sector is valid." << std::endl;
+    std::cout<<"---------------------------------------------------------"<<std::endl;
     return true;
 }
