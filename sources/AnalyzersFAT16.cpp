@@ -204,7 +204,7 @@ void detectSizeMismatch(const uint16_t* FAT, int FATSize, int bytesPerSec, int s
 }
 
 // 3. Функція для виявлення загублених кластерів та їх очищення
-void detectAndFreeLostClusters(uint16_t* FAT, int FATSize, const std::vector<FileEntry>& fileEntries, bool fixErrors) {
+void detectAndFreeLostClusters(uint16_t* FAT, int FATSize, const std::vector<FileEntry>& fileEntries,bool fixErrors) {
     // Відстеження всіх кластерів, які використовуються файлами
     std::unordered_set<int> usedClusters;
 
@@ -215,7 +215,7 @@ void detectAndFreeLostClusters(uint16_t* FAT, int FATSize, const std::vector<Fil
     }
 
     // Виявлення загублених кластерів
-    for (int i = 2; i < FATSize; ++i) {
+    for (int i = 3; i < FATSize; ++i) {
         if (FAT[i] != 0x0000 && usedClusters.find(i) == usedClusters.end()) {
             // Якщо кластер позначений як зайнятий, але не використовується, він вважається загубленим
             std::cout << "Lost cluster found at " << i << ". Marking it as free.\n";

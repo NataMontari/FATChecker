@@ -159,7 +159,8 @@ void detectAndFreeLostClusters12(FAT12& fat, std::vector<FileEntry>& fileEntries
         usedClusters.insert(file.clusterChain.begin(), file.clusterChain.end());
     }
 
-    for (int cluster = 2; cluster < fat.FATSize / 3 * 2; ++cluster) {
+    for (int cluster = 3; cluster < fat.FATSize / 3 * 2; ++cluster) {
+
         if (fat.getEntry(cluster) != 0 && fat.getEntry(cluster) != 0xFFF && !usedClusters.count(cluster)) {
             std::cout << "Lost cluster detected: " << cluster << "\n";
 

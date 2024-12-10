@@ -29,9 +29,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1468feff-c732-423a-95e1-26b613274a08" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fat16_.img" beforeDir="false" afterPath="$PROJECT_DIR$/data/fat16_.img" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sources/AnalyzersFAT12.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT12.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sources/AnalyzersFAT16.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT16.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -146,7 +145,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/sources/AnalyzersFAT12.cpp</url>
-          <line>425</line>
+          <line>426</line>
           <option name="timeStamp" value="10" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">

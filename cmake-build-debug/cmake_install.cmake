@@ -1,8 +1,8 @@
-# Install script for directory: /home/vbronetskyi/OS/FATChecker
+# Install script for directory: /home/nataliia/Projects/OS/FATChecker
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/vbronetskyi/OS/FATChecker")
+  set(CMAKE_INSTALL_PREFIX "/home/nataliia/Projects/OS/FATChecker")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/vbronetskyi/OS/FATChecker/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/nataliia/Projects/OS/FATChecker/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
