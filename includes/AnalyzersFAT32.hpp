@@ -6,6 +6,14 @@
 #include <unordered_set>
 
 // аналіз FAT таблиць
+void populateClusterChains32(const uint32_t* FAT, int FATSize, std::vector<FileEntry>& fileEntries);
+std::vector<uint32_t > getClusterChain32(uint32_t startCluster, const uint32_t* FAT, int FATSize);
+void analyzeClusterInvariants32(uint32_t* FAT, int FATSize, int bytesPerSec, int secPerCluster, std::vector<FileEntry> &fileEntries, int rootCluster, bool fixErrors);
+void detectClusterDuplication32(uint32_t* FAT, int FATSize, std::vector<FileEntry>& fileEntries, bool fixErrors) ;
+void checkEndOfChain32(const uint32_t* FAT, int FATSize, const std::vector<FileEntry>& fileEntries, bool fixErrors);
+void detectAndFreeLostClusters32(uint32_t* FAT, int FATSize, const std::vector<FileEntry>& fileEntries, int rootCluster,bool fixErrors) ;
+void detectSizeMismatch32(const uint32_t* FAT, int FATSize, int bytesPerSec, int secPerCluster, std::vector<FileEntry>& fileEntries, bool fixErrors);
+void detectClusterDuplication32(uint32_t* FAT, int FATSize, std::vector<FileEntry>& fileEntries, bool fixErrors);
 
 void AnalyzeCopyFAT32();
 bool analyzeFAT32Tables(const std::vector<uint32_t*>& FATs, int FATSize, uint16_t bytesPerSec, int startFATSector, bool fixErrors);

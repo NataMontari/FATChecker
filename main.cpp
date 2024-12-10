@@ -681,7 +681,7 @@ int main(int argc, char* argv[]) {
                 std::cout<<"---------------------------------------------------------"<<std::endl;
             // аналіз використання кластерів
             std::vector<uint32_t> tempFAT(FATs[0], FATs[0] + fatSize32);
-            analyzeClusterUsage32(tempFAT, fatSize32, rootDirEntries, fixErrors);
+            analyzeClusterInvariants32(FATs[0], FATSize, bytesPerSec, secPerClus, fileEntries, rootCluster, fixErrors);
 
             // перевірка загублених кластерів
             std::unordered_set<uint32_t> usedClusters;

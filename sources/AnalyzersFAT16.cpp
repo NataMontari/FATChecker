@@ -671,6 +671,7 @@ bool AnalyzeRootDir16(std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FA
                 std::cout << "Error: Duplicate name found: " << longFileName << std::endl;
                 isRootDirValid = false;
 
+
             } else {
                 fileNamesSet.insert(longFileName);
             }

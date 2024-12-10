@@ -609,59 +609,210 @@ bool AnalyzeRootDir32(FILE *file, uint32_t rootCluster, uint32_t dataStartSector
 
     return isRootDirValid;
 }
+void detectClusterDuplication32(uint32_t* FAT, int FATSize, std::vector<FileEntry>& fileEntries, bool fixErrors) {
+    std::unordered_map<int, std::vector<int>> clusterToFileMap;
 
-// функція для аналізу кластера
-void analyzeClusterUsage32(std::vector<uint32_t>& FAT, uint32_t FATSize, const std::vector<FAT32DirEntry>& directoryEntries, bool fixErrors) {
-    std::cout << "=== Analyzing Cluster Usage ===\n";
+    for (size_t fileIndex = 0; fileIndex < fileEntries.size(); ++fileIndex) {
+        for (int cluster : fileEntries[fileIndex].clusterChain) {
+            clusterToFileMap[cluster].push_back(fileIndex);
+        }
+    }
 
-    // мапа для відстеження кластерів, що використовуються
-    std::unordered_map<uint32_t, std::string> clusterToFileMap;
-    std::unordered_set<uint32_t> usedClusters;
-    std::unordered_set<uint32_t> freeClusters;
+    // Перевірка на дублювання кластерів
+    for (const auto& [cluster, fileIndices] : clusterToFileMap) {
+        if (fileIndices.size() > 1) { // Якщо кластер використовується більше ніж одним файлом
+            std::cout << "Error: Cluster " << cluster << " is used by multiple files:\n";
+            for (int fileIndex : fileIndices) {
+                std::cout << "  - File " << fileEntries[fileIndex].fileName << "\n";
+            }
+            std::cout << std::endl;
 
-    // Аналіз використання кластерів
-    for (const auto& entry : directoryEntries) {
-        uint32_t currentCluster = (entry.DIR_FstClusHI << 16) | entry.DIR_FstClusLO;
+            if (fixErrors) {
+                std::cout << "Do you want to fix this issue by marking EOF for affected files? (y/n): ";
+                char response;
+                std::cin >> response;
+                if (response == 'y' || response == 'Y') {
+                    // Залишаємо кластер для першого файлу, інші виправляємо
+                    for (size_t i = 1; i < fileIndices.size(); ++i) {
+                        int fileIndex = fileIndices[i];
+                        auto& affectedFile = fileEntries[fileIndex];
 
-        // Ігноруємо порожні або видалені записи
-        if (currentCluster == 0 || static_cast<unsigned char>(entry.DIR_Name[0]) == 0xE5) {
+                        // Оновлюємо передостанній кластер у ланцюжку
+                        if (affectedFile.clusterChain.size() > 1) {
+                            int secondLastCluster = affectedFile.clusterChain[affectedFile.clusterChain.size() - 2];
+                            FAT[secondLastCluster] = 0xFFFFFFFF ; // EOF для FAT16
+                            std::cout << "Updated cluster " << secondLastCluster
+                                      << " to EOF (0xFFFF) for file " << affectedFile.fileName << "\n";
+
+                            // Видаляємо останній кластер із ланцюжка
+                            affectedFile.clusterChain.pop_back();
+                        } else {
+                            std::cout << "File " << affectedFile.fileName
+                                      << " has no valid cluster chain to fix.\n";
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+
+// 2. Функція для перевірки невідповідності розміру файлу
+void detectSizeMismatch32(const uint32_t* FAT, int FATSize, int bytesPerSec, int secPerCluster, std::vector<FileEntry>& fileEntries, bool fixErrors) {
+
+    const int bytesPerCluster = bytesPerSec * secPerCluster;
+
+    for (auto& entry : fileEntries) {
+        // Отримуємо ланцюг кластерів для файлу
+
+        // Підрахунок фактичного розміру файлу
+        if(entry.clusterChain.empty()){
             continue;
         }
+        int actualSize = (entry.clusterChain.size() - 1) * bytesPerCluster + (entry.fileSize % bytesPerCluster);
 
-        while (currentCluster < FATSize) {
-            if (usedClusters.find(currentCluster) != usedClusters.end()) {
-                std::cerr << "Error: Cluster " << currentCluster << " is used by multiple files.\n";
-                if (fixErrors) {
-                    std::cout << "Fixing cluster issue: Marking as free.\n";
-                    FAT[currentCluster] = 0; // Позначення кластера як вільного
+        // Перевірка на невідповідність розміру
+        if (actualSize != entry.fileSize) {
+            std::cout << "Warning: File " << entry.fileName << " size mismatch detected!\n";
+            std::cout << "  Expected Size: " << entry.fileSize << " bytes\n";
+            std::cout << "  Actual Size: " << actualSize << " bytes\n";
+            // Пропонуємо користувачу вирішити проблему
+
+            if (fixErrors) {
+                std::cout << "Do you want to adjust the file size to match the actual size? (y/n): ";
+                char response;
+                std::cin >> response;
+                if (response == 'y' || response == 'Y') {
+                    entry.fileSize = actualSize;
+                    std::cout << "File size updated to " << actualSize << " bytes for file " << entry.fileName << ".\n";
                 }
-            } else {
-                usedClusters.insert(currentCluster);
-                clusterToFileMap[currentCluster] = std::string(entry.DIR_Name, 11);
             }
 
-            // Перехід до наступного кластера
-            uint32_t nextCluster = FAT[currentCluster];
-            if (nextCluster >= 0x0FFFFFF8) {
-                break; // Кінець ланцюга
-            }
-            currentCluster = nextCluster;
+        }
+    }
+}
+
+// 3. Функція для виявлення загублених кластерів та їх очищення
+void detectAndFreeLostClusters32(uint32_t* FAT, int FATSize, const std::vector<FileEntry>& fileEntries, int rootCluster, bool fixErrors) {
+    // Відстеження всіх кластерів, які використовуються файлами
+    std::unordered_set<int> usedClusters;
+
+    for (const auto& entry : fileEntries) {
+        for (int cluster : entry.clusterChain) {
+            usedClusters.insert(cluster);
         }
     }
 
     // Виявлення загублених кластерів
-    for (uint32_t i = 2; i < FATSize; ++i) { // Кластери починаються з 2
-        if (usedClusters.find(i) == usedClusters.end() && FAT[i] != 0) {
-            std::cerr << "Warning: Cluster " << i << " is marked as used but not referenced by any file.\n";
+    for (int i = 2; i < FATSize; ++i) {
+        if(i == rootCluster)
+        {
+            continue;
+        }
+        if (FAT[i] != 0x00000000 && usedClusters.find(i) == usedClusters.end()) {
+            // Якщо кластер позначений як зайнятий, але не використовується, він вважається загубленим
+            std::cout << "Lost cluster found at " << i << ". Marking it as free.\n";
             if (fixErrors) {
-                std::cout << "Fixing: Marking cluster " << i << " as free.\n";
-                FAT[i] = 0; // Позначення кластера як вільного
+                FAT[i] = 0x00000000;
+                std::cout << "Cluster " << i << " marked as free.\n";
             }
         }
     }
-
-    std::cout << "Cluster analysis complete.\n";
 }
+
+// 5. Функція для перевірки правильності EOC в кінці ланцюжка кластерів
+void checkEndOfChain32(const uint32_t* FAT, int FATSize, const std::vector<FileEntry>& fileEntries, bool fixErrors) {
+    for (const auto& entry : fileEntries) {
+        if (entry.clusterChain.empty()){
+            continue;
+        }
+        int lastCluster = entry.clusterChain.back();
+
+
+        // Перевіряємо останній кластер на значення EOC у FAT
+        if (FAT[lastCluster] < 0xFFFFFF8) {  // Некоректне закінчення
+            std::cout << "Warning: File " << entry.fileName << " does not end with a correct EOC marker.\n";
+            std::cout << "  Last cluster value in FAT: " << FAT[lastCluster] << " (Expected >= 0xFFF8)\n";
+
+            if (fixErrors) {
+                std::cout << "Do you want to fix the chain by marking the last cluster as EOC? (y/n): ";
+                char response;
+                std::cin >> response;
+                if (response == 'y' || response == 'Y') {
+//                    FAT[lastCluster] = 0xFFFF;  // Позначаємо останній кластер як EOC
+                    std::cout << "The chain has been fixed for file " << entry.fileName << ".\n";
+                }
+            }
+        } else {
+#ifdef DEBUG_PRNT
+            std::cout << "File " << entry.fileName << " ends with a correct EOC marker.\n";
+#endif
+
+        }
+    }
+}
+
+std::vector<uint32_t > getClusterChain32(uint32_t startCluster, const uint32_t* FAT, int FATSize) {
+    std::vector<uint32_t> chain;
+    uint32_t cluster = startCluster;
+#ifdef DEBUG_PRNT
+    std::cout<<"Start cluster: "<< cluster<<std::endl;
+#endif
+
+    while (cluster < 0xFFFFFF8 && cluster > 1 && cluster < FATSize) {
+        std::cout<<"Current Cluster: "<<cluster<<std::endl;
+        if (std::find(chain.begin(), chain.end(), cluster) != chain.end()) {
+            std::cout << "Cycle detected in cluster chain starting at cluster " << startCluster << ".\n";
+            break;  // Виявлено зациклення
+        }
+
+        chain.push_back(cluster);
+        cluster = FAT[cluster];
+        std::cout<<"Next cluster: "<<cluster<<std::endl;
+
+    }
+    return chain;
+}
+
+
+void populateClusterChains32(const uint32_t* FAT, int FATSize, std::vector<FileEntry>& fileEntries) {
+    for (auto& entry : fileEntries) {
+        std::cout<<"entry: "<<entry.fileName<<std::endl;
+        entry.clusterChain = getClusterChain32(entry.firstCluster, FAT, FATSize);
+    }
+}
+
+// функція для аналізу кластера
+void analyzeClusterInvariants32(uint32_t* FAT, int FATSize, int bytesPerSec, int secPerCluster, std::vector<FileEntry> &fileEntries, int rootCluster, bool fixErrors){
+    // Зберігаємо ланцюги кластерів для кожного файлу
+    populateClusterChains32(FAT, FATSize, fileEntries);
+
+    // Виявлення дублікатів
+    std::cout << "=== Detecting Cluster Duplication ===\n";
+    detectClusterDuplication32(FAT, FATSize, fileEntries, fixErrors);
+    std::cout << "=== Finished Detecting Cluster Duplication ===\n";
+    //
+    //    // Перевірка правильності завершення ланцюга кластерів
+    std::cout << "\n=== Checking End of Chain Markers ===\n";
+    checkEndOfChain32(FAT, FATSize, fileEntries, fixErrors);
+    std::cout << "\n=== Finished Checking End of Chain Markers ===\n";
+    //
+    //    // Перевірка на відповідність розміру файлу
+    std::cout << "\n=== Detecting Size Mismatch ===\n";
+    detectSizeMismatch32(FAT, FATSize, bytesPerSec, secPerCluster, fileEntries, fixErrors);
+    std::cout << "\n=== Finished Detecting Size Mismatch ===\n";
+    ////
+    ////    // Виявлення загублених кластерів
+    std::cout << "\n=== Detecting and Freeing Lost Clusters ===\n";
+    detectAndFreeLostClusters32(FAT, FATSize, fileEntries, rootCluster, fixErrors);
+    std::cout << "\n=== Finished Detecting and Freeing Lost Clusters ====\n";
+    ////
+
+    std::cout << "\nAnalysis complete.\n";
+
+};
 void checkLostClusters(const std::vector<uint32_t>& FAT, uint32_t FATSize, const std::unordered_set<uint32_t>& usedClusters, bool fixErrors) {
     std::cout << "=== Checking for Lost Clusters ===" << std::endl;
 
