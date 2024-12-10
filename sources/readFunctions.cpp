@@ -242,31 +242,36 @@ bool writeBootSectorToFile32(const extFAT32* bpb) {
     return true;
 }
 
-bool WriteRootDirToImage(const std::vector<FAT16DirEntry>& rootDirEntries, uint32_t rootDirSector, uint16_t bytesPerSec) {
+bool WriteRootDirToImage(FILE* fp, const std::vector<FAT16DirEntry>& rootDirEntries, uint32_t rootDirSector, uint16_t bytesPerSec) {
+    // Перевірка на валідність вказівника на файл
     if (fp == nullptr) {
         std::cerr << "Error: Invalid file pointer." << std::endl;
         return false;
     }
 
-    // Розмір сектора (FAT16 стандартно використовує 512 байт).
+    // Розрахунок зміщення до сектора кореневого каталогу
+    uint32_t offset = rootDirSector * bytesPerSec;
 
-    // Перехід до сектора кореневого каталогу.
-    if (fseek(fp, rootDirSector * bytesPerSec, SEEK_SET) != 0) {
-        std::cerr << "Error: Unable to seek to the root directory sector." << std::endl;
+    // Переміщення в потік файлу на потрібне місце
+    if (fseek(fp, offset, SEEK_SET) != 0) {
+        std::cerr << "Error: Unable to seek to the root directory sector at offset " << offset << "." << std::endl;
         return false;
     }
 
-    // Запис кожного запису каталогу у файл.
+    // Запис записів кореневого каталогу у файл
     for (const auto& entry : rootDirEntries) {
         size_t written = fwrite(&entry, sizeof(FAT16DirEntry), 1, fp);
         if (written != 1) {
-            std::cerr << "Error: Failed to write directory entry to the disk image." << std::endl;
+            std::cerr << "Error: Failed to write directory entry to the disk image at offset "
+                      << offset << "." << std::endl;
             return false;
         }
     }
 
+    // Успішне завершення
     return true;
 }
+
 
 void updateMultipleFATCopies(const uint16_t* FAT, int FATSize, int numCopies, int startFATAdress, size_t copyOffset) {
     for (int i = 0; i < numCopies; ++i) {

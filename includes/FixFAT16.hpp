@@ -26,7 +26,8 @@ struct BootSectorErrors {
 };
 
 bool fixBootSectorErrors(extFAT12_16* bpb, BootSectorErrors &errors);
-bool fixRootDirErrors();
+bool check_date(uint16_t date);
+bool fixRootDirErrors(std::vector<FAT16DirEntry>& rootDirEntries);
 bool fixDataRegionErrors();
 bool fixClusterErrors();
 

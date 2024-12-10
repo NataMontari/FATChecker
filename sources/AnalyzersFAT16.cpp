@@ -430,24 +430,6 @@ std::string getLongFileName(const std::vector<FAT16DirEntry>& rootDirEntries) {
     return longName;
 }
 
-bool check_date(uint16_t date_value) {
-    // Перевірка на 0 (не підтримується)
-    if (date_value == 0) {
-        return true; // Ігноруємо перевірку
-    }
-
-    uint8_t day = date_value & 0x1F;               // Бітові позиції 0-4
-    uint8_t month = (date_value >> 5) & 0x0F;      // Бітові позиції 5-8
-    uint8_t year = (date_value >> 9) & 0x7F;       // Бітові позиції 9-15
-
-    // Перевірка діапазонів
-    if (!(1 <= day && day <= 31)) return false;
-    if (!(1 <= month && month <= 12)) return false;
-    if (!(0 <= year && year <= 127)) return false; // 1980-2107
-
-    return true;
-}
-
 bool check_time(uint16_t time_value) {
     // Перевірка на 0 (не підтримується)
     if (time_value == 0) {
@@ -796,7 +778,7 @@ bool AnalyzeRootDir16(std::vector<FAT16DirEntry>& rootDirEntries, std::vector<FA
     }
     bool isfixed;
     if(fixErrors){
-        isfixed = fixRootDirErrors();
+        isfixed = fixRootDirErrors(rootDirEntries);
     }
 
     std::cout<<"---------------------------------------------------------"<<std::endl;
