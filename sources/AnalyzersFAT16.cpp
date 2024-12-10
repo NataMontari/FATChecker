@@ -73,7 +73,7 @@ std::vector<uint32_t > getClusterChain(uint32_t startCluster, const uint16_t* FA
 #endif
 
     while (cluster < 0xFFF8 && cluster > 1 && cluster < FATSize) {
-        std::cout<<"Current Cluster: "<<cluster<<std::endl;
+        // std::cout<<"Current Cluster: "<<cluster<<std::endl;
         if (std::find(chain.begin(), chain.end(), cluster) != chain.end()) {
             std::cout << "Cycle detected in cluster chain starting at cluster " << startCluster << ".\n";
             break;  // Виявлено зациклення
@@ -81,7 +81,7 @@ std::vector<uint32_t > getClusterChain(uint32_t startCluster, const uint16_t* FA
 
         chain.push_back(cluster);
         cluster = FAT[cluster];
-        std::cout<<"Next cluster: "<<cluster<<std::endl;
+        // std::cout<<"Next cluster: "<<cluster<<std::endl;
 
     }
     return chain;
@@ -110,7 +110,7 @@ std::vector<uint32_t > getClusterChain(uint32_t startCluster, const uint16_t* FA
 
 void populateClusterChains(const uint16_t* FAT, int FATSize, std::vector<FileEntry>& fileEntries) {
     for (auto& entry : fileEntries) {
-        std::cout<<"entry: "<<entry.fileName<<std::endl;
+        // std::cout<<"entry: "<<entry.fileName<<std::endl;
         entry.clusterChain = getClusterChain(entry.firstCluster, FAT, FATSize);
     }
 }

@@ -511,7 +511,8 @@ int main(int argc, char* argv[]) {
                 }
 #endif
                 std::cout<<"Analyzing file and directory region"<<std::endl;
-                bool isDataValid = AnalyzeDiskData12(fp, bytesPerSec, sectorsPerClus, dataRegionStartSector, dataDirEntries, fileEntries, fixErrors);
+                std::set<uint32_t> processedClusters;
+                bool isDataValid = AnalyzeDiskData12(fp, bytesPerSec, sectorsPerClus, dataRegionStartSector, dataDirEntries, fileEntries,processedClusters, fixErrors);
 
                 std::cout<<"---------------------------------------------------------"<<std::endl;
                 int FATSize12 = (FATSize*bytesPerSec*2)/3;
@@ -688,7 +689,8 @@ int main(int argc, char* argv[]) {
                 std::cout<<"---------------------------------------------------------"<<std::endl;
                 std::cout << "=== Analyzing Disk Data (Clusters) ===" << std::endl;
             // аналіз даних (кластерів)
-            AnalyzeDiskData32(fp, bytesPerSec, secPerClus, dataStartSector, dataDirEntries, fileEntries, FATs[0], FATSize,  fixErrors);
+                std::set<uint32_t> processedClusters;
+            AnalyzeDiskData32(fp, bytesPerSec, secPerClus, dataStartSector, dataDirEntries, fileEntries, FATs[0], FATSize,  processedClusters,fixErrors);
                 std::cout<<"---------------------------------------------------------"<<std::endl;
             // аналіз використання кластерів
             std::vector<uint32_t> tempFAT(FATs[0], FATs[0] + fatSize32);

@@ -762,7 +762,7 @@ std::vector<uint32_t > getClusterChain32(uint32_t startCluster, const uint32_t* 
 #endif
 
     while (cluster < 0xFFFFFF8 && cluster > 1 && cluster < FATSize) {
-        std::cout<<"Current Cluster: "<<cluster<<std::endl;
+        // std::cout<<"Current Cluster: "<<cluster<<std::endl;
         if (std::find(chain.begin(), chain.end(), cluster) != chain.end()) {
             std::cout << "Cycle detected in cluster chain starting at cluster " << startCluster << ".\n";
             break;  // Виявлено зациклення
@@ -770,7 +770,7 @@ std::vector<uint32_t > getClusterChain32(uint32_t startCluster, const uint32_t* 
 
         chain.push_back(cluster);
         cluster = FAT[cluster];
-        std::cout<<"Next cluster: "<<cluster<<std::endl;
+        // std::cout<<"Next cluster: "<<cluster<<std::endl;
 
     }
     return chain;
@@ -779,7 +779,7 @@ std::vector<uint32_t > getClusterChain32(uint32_t startCluster, const uint32_t* 
 
 void populateClusterChains32(const uint32_t* FAT, int FATSize, std::vector<FileEntry>& fileEntries) {
     for (auto& entry : fileEntries) {
-        std::cout<<"entry: "<<entry.fileName<<std::endl;
+        // std::cout<<"entry: "<<entry.fileName<<std::endl;
         entry.clusterChain = getClusterChain32(entry.firstCluster, FAT, FATSize);
     }
 }
@@ -837,7 +837,7 @@ void checkLostClusters(const std::vector<uint32_t>& FAT, uint32_t FATSize, const
     }
 }
 
-void AnalyzeDiskData32(FILE *file, uint16_t bytesPerSec, uint8_t secPerClus, uint32_t dataStartSector, const std::vector<FAT32DirEntry> &dirEntries, std::vector<FileEntry> &fileEntries, uint32_t *FAT, uint32_t FATSize, bool fixErrors,  bool isRootDir) {
+void AnalyzeDiskData32(FILE *file, uint16_t bytesPerSec, uint8_t secPerClus, uint32_t dataStartSector, const std::vector<FAT32DirEntry> &dirEntries, std::vector<FileEntry> &fileEntries, uint32_t *FAT, uint32_t FATSize, std::set<uint32_t> processedClusters, bool fixErrors,  bool isRootDir) {
 
 
     uint32_t clusterNum;
@@ -931,7 +931,10 @@ void AnalyzeDiskData32(FILE *file, uint16_t bytesPerSec, uint8_t secPerClus, uin
             continue; // Не викликаємо рекурсію для файлів
         }
 
-        visitedClusters.push_back(clusterNum);
+        if (processedClusters.find(clusterNum) != processedClusters.end()) {
+            continue;
+        }
+        processedClusters.insert(clusterNum);
                 // Якщо це директорія, виводимо ім'я директорії та обробляємо її рекурсивно
 #ifdef DEBUG_PRNT
         std::cout << "Directory: " << entryDirName << " (cluster #" << clusterNum << ")" << std::endl;
@@ -988,7 +991,7 @@ void AnalyzeDiskData32(FILE *file, uint16_t bytesPerSec, uint8_t secPerClus, uin
             if (!hasParentDir) {
                 std::cerr << "Warning: Directory does not contain the parent directory entry ('..')." << std::endl;
             }
-            AnalyzeDiskData32(file, bytesPerSec, secPerClus, dataStartSector, subDirEntries,  fileEntries, FAT, FATSize, fixErrors, false);
+            AnalyzeDiskData32(file, bytesPerSec, secPerClus, dataStartSector, subDirEntries,  fileEntries, FAT, FATSize, processedClusters, fixErrors, false);
 
         }
 

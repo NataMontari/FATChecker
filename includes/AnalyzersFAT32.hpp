@@ -44,7 +44,7 @@ void checkLostClusters(const std::vector<uint32_t>& FAT, uint32_t FATSize, const
 void analyzeClusterUsage32(std::vector<uint32_t>& FAT, uint32_t FATSize, const std::vector<FAT32DirEntry>& directoryEntries, bool fixErrors);
 
 // аналіз даних
-void AnalyzeDiskData32(FILE *file, uint16_t bytesPerSec, uint8_t secPerClus, uint32_t dataStartSector, const std::vector<FAT32DirEntry> &dirEntries, std::vector<FileEntry> &fileEntries, uint32_t *FAT, uint32_t FATSize, bool fixErrors, bool isRootDir = true);
+void AnalyzeDiskData32(FILE *file, uint16_t bytesPerSec, uint8_t secPerClus, uint32_t dataStartSector, const std::vector<FAT32DirEntry> &dirEntries, std::vector<FileEntry> &fileEntries, uint32_t *FAT, uint32_t FATSize, std::set<uint32_t> processedClusters, bool fixErrors, bool isRootDir = true);
 void handleInvalidBootSector32(extFAT32& bpb) ;
 bool attemptRestoreFromBackup32(extFAT32& bpb);
 bool restoreFromBackup32(extFAT32& bpb);

@@ -31,11 +31,12 @@
   <component name="ChangeListManager">
     <list default="true" id="1468feff-c732-423a-95e1-26b613274a08" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fat16_.img" beforeDir="false" afterPath="$PROJECT_DIR$/fat16_.img" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/includes/readFunctions.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/includes/readFunctions.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/includes/AnalyzersFAT12.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/includes/AnalyzersFAT12.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/includes/AnalyzersFAT32.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/includes/AnalyzersFAT32.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sources/AnalyzersFAT12.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT12.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sources/AnalyzersFAT16.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT16.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sources/readFunctions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/readFunctions.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sources/AnalyzersFAT32.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT32.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +115,7 @@
       <workItem from="1733767362481" duration="8000" />
       <workItem from="1733767466384" duration="848000" />
       <workItem from="1733772796592" duration="96000" />
-      <workItem from="1733773170491" duration="24622000" />
+      <workItem from="1733773170491" duration="26955000" />
     </task>
     <servers />
   </component>

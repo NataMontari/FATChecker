@@ -799,7 +799,7 @@ bool readDataCluster(FILE *file, uint16_t bytesPerSec, uint32_t startSectorAdres
     return true;
 }
 
-bool AnalyzeDiskData12(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerCluster, uint32_t dataStartSector, const std::vector<FAT12DirEntry>& dataDirEntries, std::vector<FileEntry> &fileEntries, bool fixErrors, bool isRootDir){
+bool AnalyzeDiskData12(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerCluster, uint32_t dataStartSector, const std::vector<FAT12DirEntry>& dataDirEntries, std::vector<FileEntry> &fileEntries, std::set<uint32_t>& processedClusters, bool fixErrors, bool isRootDir){
     uint32_t clusterNum;
     uint32_t startSectorAddress;
     std::vector<std::string> lfnParts;  // Для зберігання частин довгого імені
@@ -893,7 +893,10 @@ bool AnalyzeDiskData12(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
             // std::cout << "File: " << entryDirName << std::endl;
             continue; // Не викликаємо рекурсію для файлів
         }
-
+        if (processedClusters.find(clusterNum) != processedClusters.end()) {
+            continue;
+        }
+        processedClusters.insert(clusterNum);
         // Якщо це директорія, виводимо ім'я директорії та обробляємо її рекурсивно
 #ifdef DEBUG_PRNT
         std::cout << "Directory: " << entryDirName << " (cluster #" << clusterNum << ")" << std::endl;
@@ -949,7 +952,7 @@ bool AnalyzeDiskData12(FILE *file, uint16_t bytesPerSec, uint8_t sectorsPerClust
                 std::cerr << "Warning: Directory does not contain the parent directory entry ('..')." << std::endl;
             }
 
-            AnalyzeDiskData12(file, bytesPerSec, sectorsPerCluster, dataStartSector, subDirEntries,  fileEntries, fixErrors, false);
+            AnalyzeDiskData12(file, bytesPerSec, sectorsPerCluster, dataStartSector, subDirEntries,  fileEntries, processedClusters, fixErrors, false);
 
         }
     }
