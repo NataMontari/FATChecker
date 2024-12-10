@@ -31,13 +31,7 @@
     <list default="true" id="1468feff-c732-423a-95e1-26b613274a08" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/TargetDirectories.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/TargetDirectories.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/cmake_install.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/cmake_install.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fat16_test_corrupted_root_and_data.img" beforeDir="false" afterPath="$PROJECT_DIR$/fat16_test_corrupted_root_and_data.img" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/includes/FixFAT16.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/includes/FixFAT16.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sources/AnalyzersFAT16.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/AnalyzersFAT16.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sources/FixFAT16.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/FixFAT16.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sources/readFunctions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sources/readFunctions.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fat16_.img" beforeDir="false" afterPath="$PROJECT_DIR$/data/fat16_.img" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
