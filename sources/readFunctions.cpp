@@ -267,3 +267,56 @@ bool WriteRootDirToImage(const std::vector<FAT16DirEntry>& rootDirEntries, uint3
 
     return true;
 }
+
+void updateMultipleFATCopies(const uint16_t* FAT, int FATSize, int numCopies, int startFATAdress, size_t copyOffset) {
+    for (int i = 0; i < numCopies; ++i) {
+        // Переміщаємося в позицію для поточної копії FAT
+        if (fseek(fp, startFATAdress+i * copyOffset, SEEK_SET) != 0) {
+            std::cerr << "Error seeking to FAT copy " << i + 1 << " position." << std::endl;
+            return;
+        }
+
+        // Записуємо нову копію FAT
+        size_t written = fwrite(FAT, sizeof(uint16_t), FATSize, fp);
+        if (written != FATSize) {
+            std::cerr << "Error writing FAT copy " << i + 1 << " to file." << std::endl;
+        } else {
+            std::cout << "FAT copy " << i + 1 << " successfully updated." << std::endl;
+        }
+    }
+}
+void updateMultipleFATCopies32(const uint32_t* FAT, int FATSize, int numCopies, int startFATAdress, size_t copyOffset) {
+    for (int i = 0; i < numCopies; ++i) {
+        // Переміщаємося в позицію для поточної копії FAT
+        if (fseek(fp, startFATAdress+i * copyOffset, SEEK_SET) != 0) {
+            std::cerr << "Error seeking to FAT copy " << i + 1 << " position." << std::endl;
+            return;
+        }
+
+        // Записуємо нову копію FAT
+        size_t written = fwrite(FAT, sizeof(uint32_t), FATSize, fp);
+        if (written != FATSize) {
+            std::cerr << "Error writing FAT copy " << i + 1 << " to file." << std::endl;
+        } else {
+            std::cout << "FAT copy " << i + 1 << " successfully updated." << std::endl;
+        }
+    }
+}
+
+void updateMultipleFATCopies12(const uint8_t* FAT, int FATSize, int numCopies, int startFATAdress, size_t copyOffset) {
+    for (int i = 0; i < numCopies; ++i) {
+        // Переміщаємося в позицію для поточної копії FAT
+        if (fseek(fp, startFATAdress+i * copyOffset, SEEK_SET) != 0) {
+            std::cerr << "Error seeking to FAT copy " << i + 1 << " position." << std::endl;
+            return;
+        }
+
+        // Записуємо нову копію FAT
+        size_t written = fwrite(FAT, sizeof(uint32_t), FATSize, fp);
+        if (written != FATSize) {
+            std::cerr << "Error writing FAT copy " << i + 1 << " to file." << std::endl;
+        } else {
+            std::cout << "FAT copy " << i + 1 << " successfully updated." << std::endl;
+        }
+    }
+}

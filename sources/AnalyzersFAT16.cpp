@@ -228,7 +228,7 @@ void detectAndFreeLostClusters(uint16_t* FAT, int FATSize, const std::vector<Fil
 }
 
 // 5. Функція для перевірки правильності EOC в кінці ланцюжка кластерів
-void checkEndOfChain(const uint16_t* FAT, int FATSize, const std::vector<FileEntry>& fileEntries, bool fixErrors) {
+void checkEndOfChain(uint16_t* FAT, int FATSize, const std::vector<FileEntry>& fileEntries, bool fixErrors) {
     for (const auto& entry : fileEntries) {
         if (entry.clusterChain.empty()){
             continue;
@@ -246,7 +246,7 @@ void checkEndOfChain(const uint16_t* FAT, int FATSize, const std::vector<FileEnt
                 char response;
                 std::cin >> response;
                 if (response == 'y' || response == 'Y') {
-//                    FAT[lastCluster] = 0xFFFF;  // Позначаємо останній кластер як EOC
+                    FAT[lastCluster] = 0xFFFF;  // Позначаємо останній кластер як EOC
                     std::cout << "The chain has been fixed for file " << entry.fileName << ".\n";
                 }
             }
@@ -326,7 +326,10 @@ void analyzeClusterInvariants(uint16_t* FAT, int FATSize, int bytesPerSec, int s
     detectAndFreeLostClusters(FAT, FATSize, fileEntries, fixErrors);
     std::cout << "\n=== Finished Detecting and Freeing Lost Clusters ====\n";
 ////
-
+    // if(fixErrors)
+    // {
+    //     updateMultipleFATCopies(FAT, FATSize, startFATSector*bytesPerSec, sectorsPerFAT*bytesPerSec);
+    // }
     std::cout << "\nAnalysis complete.\n";
 
 };

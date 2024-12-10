@@ -17,6 +17,8 @@
 #include "AnalyzersFAT12.hpp"
 #include <set>
 
+#include "readFunctions.hpp"
+
 // #define DEBUG_PRNT
 
 // Читання кореневої директорії
@@ -460,7 +462,7 @@ int main(int argc, char* argv[]) {
                 const uint16_t bytesPerSec = bpb.basic.BPB_BytsPerSec;
                 const int startFATSector = bpb.basic.BPB_RsvdSecCnt;
                 const int numberOfFATs = bpb.basic.BPB_NumFATs; // Кількість FAT таблиць
-
+                int fatSize12 = FATSize*bytesPerSec/sizeof(uint8_t);
             if (!readFAT12Tables(fp, FATs, FATSize, startFATSector, numberOfFATs, bytesPerSec)) {
                 fclose(fp);
                 exit(EXIT_FAILURE);
@@ -514,6 +516,10 @@ int main(int argc, char* argv[]) {
                 std::cout<<"---------------------------------------------------------"<<std::endl;
                 int FATSize12 = (FATSize*bytesPerSec*2)/3;
             analyzeClusterInvariants12(FATs[0], FATSize12, bytesPerSec, sectorsPerClus, fileEntries, fixErrors);
+                if(fixErrors)
+                {
+                    updateMultipleFATCopies12(FATs[0], fatSize12, numberOfFATs, startFATSector*bytesPerSec, FATSize*bytesPerSec);
+                }
             for (auto& FAT : FATs) {
                 delete[] FAT;
             }
@@ -588,6 +594,7 @@ int main(int argc, char* argv[]) {
             // Виводимо к-сть root directories, директорій та файлів
             std::vector<FAT16DirEntry> dataDirEntries;
             std::vector<FileEntry> fileEntries;
+                int fatSize16 = FATSize*bytesPerSec/sizeof(uint16_t);
             bool isRootValid = AnalyzeRootDir16(rootDirEntries, dataDirEntries, fileEntries, fixErrors);
 
             totalResult = totalResult && isRootValid;
@@ -607,7 +614,11 @@ int main(int argc, char* argv[]) {
             bool isDataValid = AnalyzeDiskData16(fp, bytesPerSec, sectorsPerClus, dataRegionStartSector, dataDirEntries, fileEntries, processedClusters, fixErrors);
 
                 std::cout<<"---------------------------------------------------------"<<std::endl;
-            analyzeClusterInvariants(FATs[0], FATSize*2, bytesPerSec, sectorsPerClus, fileEntries, fixErrors);
+            analyzeClusterInvariants(FATs[0], fatSize16, bytesPerSec, sectorsPerClus, fileEntries, fixErrors);
+                if(fixErrors)
+                {
+                    updateMultipleFATCopies(FATs[0], fatSize16, numberOfFATs, startFATSector*bytesPerSec, FATSize*bytesPerSec);
+                }
             for (auto &FAT: FATs){
                 delete[] FAT;
             }
@@ -682,16 +693,19 @@ int main(int argc, char* argv[]) {
             // аналіз використання кластерів
             std::vector<uint32_t> tempFAT(FATs[0], FATs[0] + fatSize32);
             analyzeClusterInvariants32(FATs[0], FATSize, bytesPerSec, secPerClus, fileEntries, rootCluster, fixErrors);
-
-            // перевірка загублених кластерів
-            std::unordered_set<uint32_t> usedClusters;
-            for (const auto &entry : rootDirEntries) {
-                uint32_t firstCluster = (entry.DIR_FstClusHI << 16) | entry.DIR_FstClusLO;
-                if (firstCluster >= 2) {
-                    usedClusters.insert(firstCluster);
+                if(fixErrors)
+                {
+                    updateMultipleFATCopies32(FATs[0], fatSize32, numFATs, rsvdSecCnt*bytesPerSec, FATSize*bytesPerSec);
                 }
-            }
-            checkLostClusters(std::vector<uint32_t>(FATs[0], FATs[0] + fatSize32), fatSize32, usedClusters, fixErrors);
+            // // перевірка загублених кластерів
+            // std::unordered_set<uint32_t> usedClusters;
+            // for (const auto &entry : rootDirEntries) {
+            //     uint32_t firstCluster = (entry.DIR_FstClusHI << 16) | entry.DIR_FstClusLO;
+            //     if (firstCluster >= 2) {
+            //         usedClusters.insert(firstCluster);
+            //     }
+            // }
+            // checkLostClusters(std::vector<uint32_t>(FATs[0], FATs[0] + fatSize32), fatSize32, usedClusters, fixErrors);
 
             // звільнення пам'яті для FAT таблиць
             for (auto FAT : FATs) delete[] FAT;
